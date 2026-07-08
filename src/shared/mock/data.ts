@@ -1,6 +1,5 @@
 import { DataFormat, ItemFormat } from "../model/types";
 
-
 export const categories: DataFormat[] = [
   {
     id: 1,
@@ -70,6 +69,7 @@ export const items: ItemFormat[] = [
     promSize: 15,
     categorie: "Автотовары",
     image: "https://picsum.photos/seed/bosch-perforator/400/400",
+    popular: true,
   },
   {
     id: 2,
@@ -80,6 +80,7 @@ export const items: ItemFormat[] = [
     promSize: 10,
     categorie: "Электроника",
     image: "https://picsum.photos/seed/xiaomi-vacuum/400/400",
+    popular: true,
   },
   {
     id: 3,
@@ -90,6 +91,7 @@ export const items: ItemFormat[] = [
     promSize: 0,
     categorie: "Электроника",
     image: "https://picsum.photos/seed/samsung-a54/400/400",
+    popular: true,
   },
   {
     id: 4,
@@ -100,6 +102,7 @@ export const items: ItemFormat[] = [
     promSize: 0,
     categorie: "Красота и здоровье",
     image: "https://picsum.photos/seed/philips-shaver/400/400",
+    popular: false,
   },
   {
     id: 5,
@@ -110,6 +113,7 @@ export const items: ItemFormat[] = [
     promSize: 0,
     categorie: "Дом и сад",
     image: "https://picsum.photos/seed/tefal-pan/400/400",
+    popular: false,
   },
   {
     id: 6,
@@ -120,6 +124,7 @@ export const items: ItemFormat[] = [
     promSize: 20,
     categorie: "Электроника",
     image: "https://picsum.photos/seed/logitech-mouse/400/400",
+    popular: true,
   },
   {
     id: 7,
@@ -130,6 +135,7 @@ export const items: ItemFormat[] = [
     promSize: 12,
     categorie: "Электроника",
     image: "https://picsum.photos/seed/sony-headphones/400/400",
+    popular: true,
   },
   {
     id: 8,
@@ -140,6 +146,7 @@ export const items: ItemFormat[] = [
     promSize: 0,
     categorie: "Дом и сад",
     image: "https://picsum.photos/seed/ikea-desk/400/400",
+    popular: false,
   },
   {
     id: 9,
@@ -150,6 +157,7 @@ export const items: ItemFormat[] = [
     promSize: 0,
     categorie: "Спорт и отдых",
     image: "https://picsum.photos/seed/adidas-shoes/400/400",
+    popular: true,
   },
   {
     id: 10,
@@ -160,6 +168,7 @@ export const items: ItemFormat[] = [
     promSize: 18,
     categorie: "Автотовары",
     image: "https://picsum.photos/seed/dewalt-drill/400/400",
+    popular: false,
   },
   {
     id: 11,
@@ -170,6 +179,7 @@ export const items: ItemFormat[] = [
     promSize: 8,
     categorie: "Электроника",
     image: "https://picsum.photos/seed/lg-tv/400/400",
+    popular: true,
   },
   {
     id: 12,
@@ -180,6 +190,7 @@ export const items: ItemFormat[] = [
     promSize: 0,
     categorie: "Одежда и обувь",
     image: "https://picsum.photos/seed/nike-tshirt/400/400",
+    popular: false,
   },
   {
     id: 13,
@@ -190,6 +201,7 @@ export const items: ItemFormat[] = [
     promSize: 0,
     categorie: "Красота и здоровье",
     image: "https://picsum.photos/seed/braun-dryer/400/400",
+    popular: false,
   },
   {
     id: 14,
@@ -200,6 +212,7 @@ export const items: ItemFormat[] = [
     promSize: 10,
     categorie: "Электроника",
     image: "https://picsum.photos/seed/airpods-pro/400/400",
+    popular: true,
   },
   {
     id: 15,
@@ -210,5 +223,6 @@ export const items: ItemFormat[] = [
     promSize: 0,
     categorie: "Красота и здоровье",
     image: "https://picsum.photos/seed/xiaomi-scale/400/400",
+    popular: false,
   },
 ];

@@ -7,7 +7,6 @@ interface ICatProps {
 }
 
 const CategorieCard = ({ item }: ICatProps) => {
-  console.log(item);
   return (
     <Link
       href="/"

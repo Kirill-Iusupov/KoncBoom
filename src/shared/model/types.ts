@@ -15,5 +15,5 @@ export type ItemFormat = {
   promSize: number;
   categorie?: string;
   image: string;
-  popular?: boolean;
+  popular: boolean;
 };
