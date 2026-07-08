@@ -14,7 +14,7 @@ const Popular = () => {
         <MainPageButton url="catalog" title="Все товары" />
       </div>
       <div className="flex gap-5 items-center flex-wrap">
-        {popularItems.slice(4).map((item) => (
+        {popularItems.map((item) => (
           <ItemCard item={item} key={item.id} />
         ))}
       </div>

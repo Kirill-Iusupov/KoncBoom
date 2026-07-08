@@ -13,7 +13,7 @@ export type ItemFormat = {
   id: number;
   prom: boolean;
   promSize: number;
-  categorie?: string;
+  categorie: string;
   image: string;
   popular: boolean;
 };
