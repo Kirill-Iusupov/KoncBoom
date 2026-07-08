@@ -1,6 +1,7 @@
 import Link from "next/link";
-import Search from "../../search";
+
 import { links } from "@/src/shared/links/links";
+import { Search } from "@/src/shared/ui/Search";
 
 export const NavLinksWithSearch = () => {
   return (
@@ -10,7 +11,7 @@ export const NavLinksWithSearch = () => {
           <Link
             key={link.url}
             href={link.url}
-            className="hover:underline cursor-pointer text-center flex items-center justify-center "
+            className="hover:underline cursor-pointer text-center flex items-center "
           >
             {link.title}
           </Link>

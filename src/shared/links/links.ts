@@ -3,5 +3,5 @@ export const links = [
   { title: "Категории", url: "/categories" },
   { title: "Товары", url: "/catalog" },
   { title: "Акции", url: "/promotions" },
-  { title: "О нас", url: "/aboutUS" },
+  { title: "О нас", url: "/aboutUs" },
 ];

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Wrapper } from "./Wrapper";
 import Search from "@/src/features/search";
 import NavLinksWithSearch from "@/src/features/navLinksWithSearch";
+import { CartButton } from "@/src/shared/ui/CartButton";
 
 export const Header = () => {
   return (
@@ -16,7 +17,7 @@ export const Header = () => {
           </Link>
           <div className="flex gap-4 items-center">
             <NavLinksWithSearch />
-            <div>Cart</div>
+            <CartButton />
           </div>
         </nav>
       </Wrapper>
