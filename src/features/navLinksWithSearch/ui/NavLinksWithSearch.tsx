@@ -11,7 +11,7 @@ export const NavLinksWithSearch = () => {
           <Link
             key={link.url}
             href={link.url}
-            className="hover:underline cursor-pointer text-center flex items-center "
+            className="hover:underline cursor-pointer text-center"
           >
             {link.title}
           </Link>

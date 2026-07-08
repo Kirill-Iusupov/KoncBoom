@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import "tailwindcss" important;
 
 * {
   margin: 0;
