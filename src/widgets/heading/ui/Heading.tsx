@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Wrapper } from "../../header/ui/Wrapper";
+import { Wrapper } from "../../../shared/ui/Wrapper";
 import { heading_items } from "../model/heading.mock";
 
 const Heading = () => {

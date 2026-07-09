@@ -1,5 +1,5 @@
 import React from "react";
-import { Wrapper } from "../../header/ui/Wrapper";
+import { Wrapper } from "../../../shared/ui/Wrapper";
 import { footer_items } from "../model/footer.mock";
 
 export const Footer = () => {

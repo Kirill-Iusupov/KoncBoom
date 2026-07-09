@@ -1,10 +1,8 @@
 import { MainPageButton } from "@/src/shared/ui/MainPageButton";
-import { items } from "@/src/shared/mock/data";
 import { popularItems } from "@/src/shared/api/api";
 import ItemCard from "@/src/features/ItemCard";
 
 const Popular = () => {
-  console.log(items);
   return (
     <div className="flex flex-col gap-8 mb-20">
       <div className="flex items-center justify-between">
