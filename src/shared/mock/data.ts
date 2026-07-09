@@ -2,6 +2,13 @@ import { DataFormat, ItemFormat } from "../model/types";
 
 export const categories: DataFormat[] = [
   {
+    id: 0,
+    title: "Все",
+    description: "Все категории",
+    count: 1000,
+    icon: "https://api.iconify.design/mdi:laptop.svg",
+  },
+  {
     id: 1,
     title: "Электроника",
     description: "Смартфоны, ноутбуки, наушники и другая техника",

@@ -1,5 +1,5 @@
 import { CatergoriesOnMain as Categories } from "@/src/widgets/categoriesOnMain";
-import { Wrapper } from "@/src/widgets/header/ui/Wrapper";
+import { Wrapper } from "@/src/shared/ui/Wrapper";
 import { MainPageInfo as Info } from "@/src/widgets/mainPageInfo";
 import Popular from "@/src/widgets/popular";
 import { PromsOnMain as Promotions } from "@/src/widgets/promsOnMain";
