@@ -1,0 +1,22 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.Python
+
+# --- Виртуальные окружения ---
+venv/
+.venv/
+env/
+
+# --- Django ---
+*.log
+staticfiles/
+media/
+
+# --- Секреты (коммитится только .env.example) ---
+.env
+
+# --- IDE ---
+.idea/
+.vscode/
