@@ -40,16 +40,21 @@ services:
       - media_data:/app/media
     expose:
       - "8000"
+    # migrate + collectstatic + gunicorn — в entrypoint.sh
 
   frontend:
     build:
       context: .
       dockerfile: Dockerfile.frontend
+      args:
+        # При локальной разработке через docker-compose:
+        # backend доступен через nginx на порту 80
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost/api}
     restart: unless-stopped
-    environment:
-      NODE_ENV: production
     expose:
       - "3000"
+    depends_on:
+      - backend
 
   nginx:
     image: nginx:1.27-alpine
