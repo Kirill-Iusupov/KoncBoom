@@ -1,6 +1,9 @@
 from rest_framework.routers import DefaultRouter
 
-# Реальные ViewSet'ы (CategoryViewSet, ProductViewSet) регистрируются здесь в PR#2.
+from .views import CategoryViewSet, ProductViewSet
+
 router = DefaultRouter()
+router.register(r"categories", CategoryViewSet, basename="category")
+router.register(r"products", ProductViewSet, basename="product")
 
 urlpatterns = router.urls
