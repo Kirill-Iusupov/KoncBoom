@@ -21,6 +21,8 @@ class OrderAdmin(admin.ModelAdmin):
         "id",
         "guest_name",
         "guest_phone",
+        # status должен быть в list_display чтобы list_editable работал (Django E122)
+        "status",
         "status_badge",
         "created_at",
         "items_count",
@@ -28,7 +30,7 @@ class OrderAdmin(admin.ModelAdmin):
     list_filter = ["status", "created_at"]
     search_fields = ["guest_name", "guest_phone", "guest_address"]
     readonly_fields = ["idempotency_key", "created_at", "updated_at"]
-    list_editable = ["status"]  # быстрая смена статуса прямо в списке
+    list_editable = ["status"]
     inlines = [OrderItemInline]
     ordering = ["-created_at"]
 
@@ -50,7 +52,7 @@ class OrderAdmin(admin.ModelAdmin):
         ),
     ]
 
-    @admin.display(description="Статус")
+    @admin.display(description="Статус (цвет)")
     def status_badge(self, obj: Order) -> str:
         colors = {
             "new": "#1677ff",
