@@ -1,3 +1,4 @@
-import PromCard from "./ui/PromCard";
+import { PromCard } from "./ui/PromCard";
 
 export default PromCard;
+
