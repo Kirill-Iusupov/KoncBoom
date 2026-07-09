@@ -1,5 +1,4 @@
 from django.contrib import admin
-from django.utils.html import format_html
 
 from .models import Category, Product, Promotion
 
@@ -36,10 +35,12 @@ class ProductAdmin(admin.ModelAdmin):
     ]
     list_filter = ["category", "popular"]
     search_fields = ["title", "brand", "slug"]
+    # prepopulated_fields автоматически заполняет slug из title через JS.
+    # slug НЕ должен быть в readonly_fields одновременно —
+    # иначе Django не включает поле в форму и бросает KeyError.
     prepopulated_fields = {"slug": ("title",)}
     list_editable = ["popular", "stock", "price"]
     inlines = [PromotionInline]
-    readonly_fields = ["slug"]
 
     @admin.display(description="Акция активна", boolean=True)
     def promo_status(self, obj: Product) -> bool:
