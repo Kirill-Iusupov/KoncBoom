@@ -1,7 +1,6 @@
-import { items } from "@/src/shared/mock/data";
-import PromCard from "@/src/features/promCard";
 import { MainPageButton } from "@/src/shared/ui/MainPageButton";
 import { promotionItems } from "@/src/shared/api/api";
+import { PromCard } from "@/src/features/promCard/ui/PromCard";
 
 const PromsOnMain = () => {
   return (
@@ -13,11 +12,15 @@ const PromsOnMain = () => {
         </div>
         <MainPageButton title="Смотреть все акции" url="promotions" />
       </div>
-      <div className="flex flex-wrap gap-5">
-        {promotionItems.map((item, idx) => (
-          <div key={idx}>
-            <PromCard />
-          </div>
+      <div className="flex flex-wrap gap-5 mt-10">
+        {promotionItems.slice(0, 4).map((item, idx) => (
+          <PromCard
+            key={idx}
+            eyebrow={item.promoInfo?.eyebrow}
+            title={item.promoInfo?.title}
+            description="При покупке от 10 штук любых ручек Pilot или Stabilo"
+            discount={item.promoInfo?.discount}
+          />
         ))}
       </div>
     </div>
