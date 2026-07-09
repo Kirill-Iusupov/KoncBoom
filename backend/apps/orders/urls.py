@@ -1,6 +1,7 @@
-from rest_framework.routers import DefaultRouter
+from django.urls import path
 
-# Реальные роуты (создание заказа) регистрируются здесь в PR#3.
-router = DefaultRouter()
+from .views import OrderCreateView
 
-urlpatterns = router.urls
+urlpatterns = [
+    path("", OrderCreateView.as_view(), name="order-create"),
+]
