@@ -38,6 +38,7 @@ export const Search = () => {
       ) : (
         <Search
           name="search"
+          autoFocus
           onPressEnter={(e) => handleSearch(e)}
           className="absolute bg-[#D9EEFF] rounded-md border-none w-full h-full top-0 right-0"
           placeholder="Поиск по концелярии..."

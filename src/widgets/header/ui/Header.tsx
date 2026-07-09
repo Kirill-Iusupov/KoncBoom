@@ -1,8 +1,9 @@
 import { Logo } from "@/src/shared/ui/Logo";
 import Link from "next/link";
-import { Wrapper } from "./Wrapper";
+
 import NavLinksWithSearch from "@/src/features/navLinksWithSearch";
 import { CartButton } from "@/src/shared/ui/CartButton";
+import { Wrapper } from "@/src/shared/ui/Wrapper";
 
 export const Header = () => {
   return (
