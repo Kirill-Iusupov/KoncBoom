@@ -13,7 +13,7 @@ const MainPageInfo = () => {
         и офисным работникам.
       </p>
       <div className="flex gap-50 my-20">
-        <Button url="promotions" title="Акции" color="FF6B00" bColor="D97706" />
+        <Button url="promotions" title="Акции" color="F59E0B" bColor="D97706" />
         <Button url="categories" title="Все категории" />
       </div>
       <Info />

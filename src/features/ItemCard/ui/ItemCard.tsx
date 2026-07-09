@@ -5,7 +5,6 @@ interface IItemCardProps {
 }
 
 export const ItemCard = ({ item }: IItemCardProps) => {
-  console.log(item);
   return (
     <div
       className={`w-[calc(25%-15px)] overflow-hidden rounded-3xl flex flex-col border`}

@@ -28,7 +28,7 @@ export const PromCard = ({
       <div className="flex items-center justify-between bg-[#D3D3D3] px-5 py-4">
         <Link
           href={"/"}
-          className="rounded-lg bg-amber-500 px-6 py-3 font-bold text-slate-900 shadow-[0_3px_0_0_rgba(180,120,10,1)] transition-transform active:translate-y-[2px] active:shadow-[0_1px_0_0_rgba(180,120,10,1)]"
+          className="rounded-lg bg-[#F59E0B] px-6 py-3 font-bold border-[1px_1px_4px_1px] border-[#D97706]"
         >
           Перейти
         </Link>
