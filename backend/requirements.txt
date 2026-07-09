@@ -6,3 +6,6 @@ django-redis==5.4.0
 gunicorn==23.0.0
 drf-spectacular==0.28.0
 python-decouple==3.8
+
+# Обязателен для ImageField в Product.image — без него Django падает при старте
+Pillow==10.4.0
