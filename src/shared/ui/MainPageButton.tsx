@@ -15,7 +15,10 @@ export const MainPageButton = ({
 }: IButtonProps) => {
   return (
     <button
-      className={`bg-[#${color}] text-black py-2 px-4 rounded border-[1px_1px_4px_1px] border-[#${bColor}] p-4 cursor-pointer`}
+      className={
+        "text-black py-2 px-4 rounded border-[1px_1px_4px_1px] p-4 cursor-pointer"
+      }
+      style={{ backgroundColor: `#${color}`, borderColor: `#${bColor}` }}
     >
       <Link href={`/${url}`}>{title}</Link>
     </button>
