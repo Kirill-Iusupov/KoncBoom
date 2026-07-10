@@ -2,6 +2,7 @@
 
 import { MainPageButton } from "@/src/shared/ui/MainPageButton";
 import ItemCard from "@/src/features/ItemCard";
+
 import { useProductsStore } from "@/src/entities/catalog/model/store";
 
 const Popular = () => {
