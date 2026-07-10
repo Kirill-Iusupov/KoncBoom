@@ -1,10 +1,11 @@
-import { ItemFormat } from "@/src/shared/model/types";
+import { Product } from "@/src/shared/model/types";
 
-interface IItemCardProps {
-  item: ItemFormat;
+interface IItemProps {
+  item: Product;
 }
 
-export const ItemCard = ({ item }: IItemCardProps) => {
+export const ItemCard = ({ item }: IItemProps) => {
+  console.log(item);
   return (
     <div
       className={`w-[calc(25%-15px)] overflow-hidden rounded-3xl flex flex-col border`}

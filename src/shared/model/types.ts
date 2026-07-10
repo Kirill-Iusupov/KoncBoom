@@ -31,3 +31,39 @@ export interface IPromoCardProps {
   // Ссылка, куда ведёт кнопка "Перейти"
   url?: string;
 }
+
+export type CategoriesResult = {
+  id: number;
+  title: string;
+  slug: string;
+  description?: string;
+  icon?: string;
+  count: number;
+};
+
+export type Product = {
+  brand: string;
+  categorie: string;
+  id: number;
+  image: string;
+  popular: boolean;
+  price: string;
+  promoInfo: {
+    description: string;
+    discount: number;
+    eyebrow: string;
+    promo: boolean;
+    title: string;
+    url: string;
+  };
+  slug: string;
+  stock: number;
+  title: string;
+};
+
+export interface ResponseData<T> {
+  count: number;
+  next?: number | null;
+  prev?: number | null;
+  results: T[];
+}
