@@ -28,7 +28,7 @@ export const Products = () => {
     return results.filter((item) => item.categorie === activeCategory);
   }, [results, activeCategory]);
   return (
-    <div className="w-full flex flex-col justify-center gap-10">
+    <div className="w-full flex flex-col justify-center gap-10 mt-10">
       <CategoryFilters active={activeCategory} onChange={setActiveCategory} />
 
       {isLoading ? (
