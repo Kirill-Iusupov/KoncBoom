@@ -1,10 +1,10 @@
 "use client";
 
+import { useProductsStore } from "@/src/entities/catalog/model/store";
 import ItemCard from "@/src/features/ItemCard";
 import { Wrapper } from "@/src/shared/ui/Wrapper";
 import { CategoryFilters } from "@/src/widgets/categoriesFilter/ui/CategoryFilters";
 import { useEffect, useMemo, useState } from "react";
-import { useProductsStore } from "../model/store";
 
 export const Catalog = () => {
   const { products, getProducts, isLoading } = useProductsStore();
