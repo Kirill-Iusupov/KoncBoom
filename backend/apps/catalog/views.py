@@ -7,7 +7,7 @@
   - throttle_scope подключается точечно здесь, а не глобально
 """
 
-from django.db.models import Count, Q, QuerySet
+from django.db.models import Count, QuerySet
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import viewsets
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
@@ -25,7 +25,8 @@ from .serializers import CategorySerializer, ProductSerializer
 class CategoryViewSet(ListModelMixin, RetrieveModelMixin, viewsets.GenericViewSet):
     """
     Категории товаров.
-    count — аннотация: количество товаров в категории (только stock > 0).
+    count — аннотация: общее количество товаров в категории,
+    независимо от stock (согласовано с product_count в Django Admin).
     """
 
     serializer_class = CategorySerializer
@@ -33,11 +34,10 @@ class CategoryViewSet(ListModelMixin, RetrieveModelMixin, viewsets.GenericViewSe
     throttle_classes = [CatalogReadThrottle]
 
     def get_queryset(self) -> QuerySet[Category]:
-        # annotate count здесь — не делаем отдельный запрос в сериализаторе
-        # фильтруем: считаем только товары с остатком > 0
-        return Category.objects.annotate(
-            count=Count("products", filter=Q(products__stock__gt=0))
-        ).order_by("title")
+        # annotate count здесь — не делаем отдельный запрос в сериализаторе.
+        # Считаем ВСЕ товары категории (без фильтра по stock), чтобы значение
+        # совпадало с тем, что видит владелец в Django Admin.
+        return Category.objects.annotate(count=Count("products")).order_by("title")
 
 
 @extend_schema_view(
@@ -87,7 +87,6 @@ class ProductViewSet(ListModelMixin, RetrieveModelMixin, viewsets.GenericViewSet
             "-popular", "title"
         )
 
-        # --- Фильтры по query params ---
         category_slug = self.request.query_params.get("category")
         if category_slug:
             qs = qs.filter(category__slug=category_slug)

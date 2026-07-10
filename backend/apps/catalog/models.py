@@ -9,9 +9,14 @@
   promoInfo.promo вычисляется по датам Promotion, не хранится как флаг.
 """
 
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
+
+# Разрешённые форматы иконки категории. SVG — основной формат,
+# остальные — на случай если растровую иконку всё же захотят загрузить.
+ICON_ALLOWED_EXTENSIONS = ["svg", "png", "jpg", "jpeg", "webp"]
 
 
 class Category(models.Model):
@@ -25,8 +30,17 @@ class Category(models.Model):
         help_text="Заполняется автоматически из title, если не задан вручную.",
     )
     description: str = models.TextField("Описание", blank=True, default="")
-    # icon — имя иконки (например из Ant Design Icons), не файл
-    icon: str = models.CharField("Иконка", max_length=64, blank=True, default="")
+    # icon — файл иконки (преимущественно SVG). Не ImageField, потому что
+    # Pillow (используется ImageField для валидации) не умеет читать SVG
+    # и отклонит загрузку с ошибкой "cannot identify image file".
+    icon = models.FileField(
+        "Иконка",
+        upload_to="categories/icons/",
+        blank=True,
+        default="",
+        validators=[FileExtensionValidator(allowed_extensions=ICON_ALLOWED_EXTENSIONS)],
+        help_text="SVG, PNG, JPG или WEBP.",
+    )
 
     class Meta:
         verbose_name = "Категория"
@@ -66,7 +80,6 @@ class Product(models.Model):
         max_digits=10,
         decimal_places=2,
     )
-    # image — относительный путь или URL; хранится как строка (CDN / media)
     image: str = models.ImageField(
         "Изображение",
         upload_to="products/",
