@@ -1,6 +1,7 @@
 "use client";
 
 import { useProductsStore } from "@/src/entities/catalog/model/store";
+import EmptyPromos from "@/src/features/emptyPromos";
 import ItemCard from "@/src/features/ItemCard";
 import { Product } from "@/src/shared/model/types";
 import { useSearchParams } from "next/navigation";
@@ -40,7 +41,7 @@ export const Searching = () => {
             ))}
           </>
         ) : (
-          <></>
+          <EmptyPromos title={"Продуктов не обнаружено"} description="" />
         )}
       </div>
     </>
