@@ -9,15 +9,28 @@ export type DataFormat = {
 export type ItemFormat = {
   brand: string;
   title: string;
-  price: number;
+  price: number | string;
   id: number;
   categorie: string;
   image: string;
   popular: boolean;
-  promoInfo: IPromoCardProps;
+  promoInfo: IPromoInfo;
 };
 
-export interface IPromoCardProps {
+export type Product = {
+  brand: string;
+  categorie: string;
+  id: number;
+  image: string;
+  popular: boolean;
+  price: string;
+  promoInfo: IPromoInfo;
+  slug: string;
+  stock: number;
+  title: string;
+};
+
+export interface IPromoInfo {
   // Идет ли в данный момент акция на этот товар
   promo?: boolean;
   // Текст-эйбрика над заголовком, например "АКЦИЯ · ПИСЬМЕННЫЕ"
@@ -28,6 +41,30 @@ export interface IPromoCardProps {
   description: string;
   // Размер скидки в процентах
   discount: number;
-  // Ссылка, куда ведёт кнопка "Перейти"
-  url?: string;
+  starts_at: Date | string;
+  ends_at: Date | string;
 }
+
+export type CategoriesResult = {
+  id: number;
+  title: string;
+  slug: string;
+  description?: string;
+  icon?: string;
+  count: number;
+};
+
+export interface ResponseData<T> {
+  count: number;
+  next?: number | null;
+  prev?: number | null;
+  results: T[];
+}
+
+export type TimeLeft = {
+  hours: number;
+  minutes: number;
+  seconds: number;
+  isExpired: boolean;
+  hasStarted: boolean;
+};

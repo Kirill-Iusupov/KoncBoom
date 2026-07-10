@@ -1,8 +1,14 @@
+"use client";
+
 import { MainPageButton } from "@/src/shared/ui/MainPageButton";
-import { popularItems } from "@/src/shared/api/api";
 import ItemCard from "@/src/features/ItemCard";
+import { useProductsStore } from "@/src/entities/catalog/model/store";
 
 const Popular = () => {
+  const { products, isLoading } = useProductsStore();
+
+  const { results } = products;
+
   return (
     <div className="flex flex-col gap-8 mb-20">
       <div className="flex items-center justify-between">
@@ -12,9 +18,12 @@ const Popular = () => {
         <MainPageButton url="catalog" title="Все товары" />
       </div>
       <div className="flex gap-5 items-center flex-wrap">
-        {popularItems.map((item) => (
-          <ItemCard item={item} key={item.id} />
-        ))}
+        {results
+          .filter((e) => e.popular)
+          .slice(0, 4)
+          .map((item) => (
+            <ItemCard item={item} key={item.id} />
+          ))}
       </div>
     </div>
   );

@@ -4,14 +4,19 @@
 Контракт с фронтом (поля API — НЕ менять без синхронизации):
   Category : id, title, slug, description, icon, count (аннотация, не поле БД)
   Product  : id, brand, title, slug, price, categorie (string!), image,
-             popular, stock, promoInfo{promo, eyebrow, title, description,
-             discount, url}
+             popular, stock,
+             promoInfo{promo, eyebrow, title, description, discount,
+                       starts_at, ends_at}
   promoInfo.promo вычисляется по датам Promotion, не хранится как флаг.
+  url убран из Promotion — отдельных промо-страниц в проекте нет.
 """
 
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
+
+ICON_ALLOWED_EXTENSIONS = ["svg", "png", "jpg", "jpeg", "webp"]
 
 
 class Category(models.Model):
@@ -25,8 +30,14 @@ class Category(models.Model):
         help_text="Заполняется автоматически из title, если не задан вручную.",
     )
     description: str = models.TextField("Описание", blank=True, default="")
-    # icon — имя иконки (например из Ant Design Icons), не файл
-    icon: str = models.CharField("Иконка", max_length=64, blank=True, default="")
+    icon = models.FileField(
+        "Иконка",
+        upload_to="categories/icons/",
+        blank=True,
+        default="",
+        validators=[FileExtensionValidator(allowed_extensions=ICON_ALLOWED_EXTENSIONS)],
+        help_text="SVG, PNG, JPG или WEBP.",
+    )
 
     class Meta:
         verbose_name = "Категория"
@@ -34,7 +45,6 @@ class Category(models.Model):
         ordering = ["title"]
 
     def save(self, *args, **kwargs) -> None:
-        # Автогенерация slug из title при создании
         if not self.slug:
             self.slug = slugify(self.title, allow_unicode=True)
         super().save(*args, **kwargs)
@@ -60,13 +70,11 @@ class Product(models.Model):
         unique=True,
         help_text="Заполняется автоматически из title, если не задан вручную.",
     )
-    # DecimalField — обязательно для денег, FloatField запрещён архитектурно
     price: models.DecimalField = models.DecimalField(
         "Цена (KGS)",
         max_digits=10,
         decimal_places=2,
     )
-    # image — относительный путь или URL; хранится как строка (CDN / media)
     image: str = models.ImageField(
         "Изображение",
         upload_to="products/",
@@ -74,7 +82,6 @@ class Product(models.Model):
         default="",
     )
     popular: bool = models.BooleanField("Популярный", default=False)
-    # stock с CHECK constraint stock >= 0 создаётся через migration RunSQL
     stock: int = models.PositiveIntegerField("Остаток на складе", default=0)
 
     class Meta:
@@ -95,10 +102,8 @@ class Promotion(models.Model):
     """
     Промо-акция, привязанная к товару.
 
-    Поле promo в API НЕ хранится как флаг в БД — оно вычисляется
-    динамически: promo = starts_at <= now() <= ends_at.
-    Это сделано чтобы акция включалась/выключалась автоматически по времени
-    без ручного переключения флага.
+    promo в API вычисляется динамически: starts_at <= now() <= ends_at.
+    url убран — в проекте нет отдельных промо-страниц.
     """
 
     product: Product = models.OneToOneField(
@@ -121,12 +126,6 @@ class Promotion(models.Model):
         default=0,
         help_text="Целое число от 0 до 100.",
     )
-    url: str = models.CharField(
-        "Ссылка на страницу акции",
-        max_length=256,
-        blank=True,
-        default="",
-    )
     starts_at: models.DateTimeField = models.DateTimeField("Начало акции")
     ends_at: models.DateTimeField = models.DateTimeField("Конец акции")
 
@@ -136,10 +135,6 @@ class Promotion(models.Model):
 
     @property
     def is_active(self) -> bool:
-        """
-        Вычисляет активность акции по текущему времени.
-        Используется сериализатором для поля promoInfo.promo — не хранится в БД.
-        """
         now = timezone.now()
         return self.starts_at <= now <= self.ends_at
 

@@ -1,10 +1,11 @@
 """
 Сериализаторы каталога.
 
-Контракт с фронтом строго соблюдается:
-  - categorie (строка, не id) — фронт ждёт именно это поле с опечаткой
-  - promoInfo — вложенный объект, promo вычисляется по датам Promotion
-  - Поля только явным списком, никогда '__all__' (защита от mass assignment)
+Контракт с фронтом:
+  - categorie (строка, не id) — намеренная опечатка фронта
+  - promoInfo: promo, eyebrow, title, description, discount, starts_at, ends_at
+  - url убран из Promotion и из promoInfo — промо-страниц в проекте нет
+  - Поля только явным списком, никогда '__all__'
 """
 
 from typing import Any
@@ -15,54 +16,26 @@ from .models import Category, Product, Promotion
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    """
-    Сериализатор категории.
-    count — аннотация из get_queryset (Count продуктов), не поле модели.
-    """
-
-    # Аннотированное поле: добавляется в QuerySet через annotate(count=...)
     count = serializers.IntegerField(read_only=True)
+    icon = serializers.SerializerMethodField()
 
     class Meta:
         model = Category
         fields = ["id", "title", "slug", "description", "icon", "count"]
 
-
-class PromoInfoSerializer(serializers.Serializer):
-    """
-    Вложенный объект promoInfo в ответе по товару.
-    Данные берутся из связанной модели Promotion (если есть).
-
-    promo — вычисляемый флаг активности акции (starts_at <= now <= ends_at),
-    НЕ хранится в БД.
-    """
-
-    promo = serializers.BooleanField()
-    eyebrow = serializers.CharField()
-    title = serializers.CharField()
-    description = serializers.CharField()
-    discount = serializers.IntegerField()
-    url = serializers.CharField()
+    def get_icon(self, obj: Category) -> str:
+        """Абсолютный URL иконки или пустая строка."""
+        if not obj.icon:
+            return ""
+        request = self.context.get("request")
+        if request:
+            return request.build_absolute_uri(obj.icon.url)
+        return obj.icon.url
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор товара.
-
-    Особенности контракта:
-      - categorie (строка, не id) — намеренная опечатка из фронта,
-        меняем только вместе с фронтом
-      - image — полный URL через SerializerMethodField
-      - promoInfo — вложенный объект, собирается из Promotion или заглушки
-    """
-
-    # Фронт ждёт строку с названием категории, не её id
     categorie = serializers.CharField(source="category.title", read_only=True)
-
-    # Полный URL изображения (с доменом)
     image = serializers.SerializerMethodField()
-
-    # Вложенный объект акции
     promoInfo = serializers.SerializerMethodField()
 
     class Meta:
@@ -81,7 +54,7 @@ class ProductSerializer(serializers.ModelSerializer):
         ]
 
     def get_image(self, obj: Product) -> str:
-        """Возвращает абсолютный URL изображения или пустую строку."""
+        """Абсолютный URL изображения или пустая строка."""
         if not obj.image:
             return ""
         request = self.context.get("request")
@@ -91,20 +64,19 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def get_promoInfo(self, obj: Product) -> dict[str, Any]:
         """
-        Собирает promoInfo из связанной Promotion.
-        Если акции нет или она неактивна — возвращает заглушку с promo=False.
-
-        Обращение к obj.promotion безопасно: select_related("promotion")
-        добавлен во вьюхе, N+1 исключён.
+        Собирает promoInfo из Promotion.
+        Возвращает даты starts_at/ends_at в ISO 8601 (строка).
+        Если акции нет или она неактивна — promo=False, даты null.
+        select_related("promotion") во вьюхе исключает N+1.
         """
-        # Заглушка — то что фронт ждёт при promo=False
         empty: dict[str, Any] = {
             "promo": False,
             "eyebrow": "",
             "title": "",
             "description": "",
             "discount": 0,
-            "url": "",
+            "starts_at": None,
+            "ends_at": None,
         }
 
         try:
@@ -121,5 +93,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "title": promo.title,
             "description": promo.description,
             "discount": promo.discount,
-            "url": promo.url,
+            # ISO 8601 — фронт может отформатировать как угодно
+            "starts_at": promo.starts_at.isoformat(),
+            "ends_at": promo.ends_at.isoformat(),
         }
