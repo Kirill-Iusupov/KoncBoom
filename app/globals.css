@@ -6,6 +6,10 @@
   box-sizing: border-box;
 }
 
+button,a {
+  cursor: pointer;
+}
+
 .ant-custom-pure .ant-pagination-item {
   margin-inline: 0 !important;
   margin: 0 !important;

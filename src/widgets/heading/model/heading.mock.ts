@@ -56,7 +56,7 @@ export const heading_items: TypeHeading[] = [
         extra_info: '1 200+ позиций · ручки, карандаши, бумага, папки и многое другое',
     },
     {
-        link: '/promotion',
+        link: '/promotions',
         main_info: 'Специальные предложения',
         title: 'Акции и скидки',
         extra_info: 'Актуальные предложения — только ограниченное время',
