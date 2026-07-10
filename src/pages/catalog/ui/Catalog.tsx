@@ -4,12 +4,17 @@ import { useProductsStore } from "@/src/entities/catalog/model/store";
 import ItemCard from "@/src/features/ItemCard";
 import { Wrapper } from "@/src/shared/ui/Wrapper";
 import { CategoryFilters } from "@/src/widgets/categoriesFilter/ui/CategoryFilters";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 export const Catalog = () => {
   const { products, getProducts, isLoading } = useProductsStore();
+  const searchParams = useSearchParams();
+
+  const category = searchParams?.get("category");
+  const initialState = !category ? "Все" : category;
   const [activeCategory, setActiveCategory] = useState<string | undefined>(
-    undefined,
+    initialState,
   );
 
   useEffect(() => {
