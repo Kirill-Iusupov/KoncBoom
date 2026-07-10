@@ -28,13 +28,13 @@ export const PromCard = ({ item }: IPromoItemProps) => {
         <PromoTimer start={promoInfo.starts_at} end={promoInfo.ends_at} />
       </div>
 
-      <div className="flex items-center justify-between bg-[#D3D3D3] px-5 py-4">
-        <Link
+      <div className="flex items-center justify-center bg-[#D3D3D3] px-5 py-4">
+        {/* <Link
           href={"/"}
           className="rounded-lg bg-[#F59E0B] px-6 py-3 font-bold border-[1px_1px_4px_1px] border-[#D97706]"
         >
           Перейти
-        </Link>
+        </Link> */}
 
         <span className="text-4xl font-extrabold text-red-600">
           -{promoInfo.discount}%
