@@ -14,7 +14,8 @@ export const MainPageButton = ({
   bColor = "1E2D42",
 }: IButtonProps) => {
   return (
-    <button
+    <Link
+      href={`/${url}`}
       className={
         "text-black py-2 px-4 rounded border-[1px_1px_4px_1px] p-4 cursor-pointer active:translate-y-0.5 active:shadow-[0_1px_0_0_rgba(180,120,10,1)]"
       }
@@ -23,7 +24,7 @@ export const MainPageButton = ({
         borderColor: `#${bColor}`,
       }}
     >
-      <Link href={`/${url}`}>{title}</Link>
-    </button>
+      {title}
+    </Link>
   );
 };
