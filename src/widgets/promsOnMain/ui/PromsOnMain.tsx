@@ -1,8 +1,16 @@
+"use client";
+
 import { MainPageButton } from "@/src/shared/ui/MainPageButton";
-import { promotionItems } from "@/src/shared/api/api";
 import { PromCard } from "@/src/features/promCard/ui/PromCard";
+import { useProductsStore } from "@/src/entities/catalog/model/store";
 
 const PromsOnMain = () => {
+  const { products } = useProductsStore();
+
+  const { results } = products;
+
+  const promoItems = results.filter((e) => e.promoInfo.promo);
+
   return (
     <div>
       <div className="flex items-center justify-between">
@@ -12,17 +20,15 @@ const PromsOnMain = () => {
         </div>
         <MainPageButton title="Смотреть все акции" url="promotions" />
       </div>
-      <div className="flex flex-wrap gap-5 mt-10">
-        {promotionItems.slice(0, 4).map((item, idx) => (
-          <PromCard
-            key={idx}
-            eyebrow={item.promoInfo?.eyebrow}
-            title={item.promoInfo?.title}
-            description="При покупке от 10 штук любых ручек Pilot или Stabilo"
-            discount={item.promoInfo?.discount}
-          />
-        ))}
-      </div>
+      {promoItems.length <= 0 ? (
+        <p>Неть акция</p>
+      ) : (
+        <div className="flex flex-wrap gap-5 mt-10">
+          {promoItems.slice(0, 4).map((item, idx) => (
+            <PromCard key={idx} item={item} />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
