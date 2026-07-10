@@ -3,6 +3,7 @@
 import { MainPageButton } from "@/src/shared/ui/MainPageButton";
 import { PromCard } from "@/src/features/promCard/ui/PromCard";
 import { useProductsStore } from "@/src/entities/catalog/model/store";
+import EmptyPromos from "@/src/features/emptyPromos";
 
 const PromsOnMain = () => {
   const { products } = useProductsStore();
@@ -21,7 +22,7 @@ const PromsOnMain = () => {
         <MainPageButton title="Смотреть все акции" url="promotions" />
       </div>
       {promoItems.length <= 0 ? (
-        <p>Неть акция</p>
+        <EmptyPromos />
       ) : (
         <div className="flex flex-wrap gap-5 mt-10">
           {promoItems.slice(0, 4).map((item, idx) => (
