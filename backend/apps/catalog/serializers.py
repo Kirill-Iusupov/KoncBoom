@@ -18,23 +18,32 @@ class CategorySerializer(serializers.ModelSerializer):
     """
     Сериализатор категории.
     count — аннотация из get_queryset (Count продуктов), не поле модели.
+    icon  — полный URL файла иконки (SVG/PNG), аналогично image у Product.
     """
 
-    # Аннотированное поле: добавляется в QuerySet через annotate(count=...)
     count = serializers.IntegerField(read_only=True)
+    # icon через SerializerMethodField — FileField.url возвращает относительный
+    # путь, без request.build_absolute_uri фронт получит "/media/..." без домена.
+    icon = serializers.SerializerMethodField()
 
     class Meta:
         model = Category
         fields = ["id", "title", "slug", "description", "icon", "count"]
 
+    def get_icon(self, obj: Category) -> str:
+        """Возвращает абсолютный URL иконки или пустую строку."""
+        if not obj.icon:
+            return ""
+        request = self.context.get("request")
+        if request:
+            return request.build_absolute_uri(obj.icon.url)
+        return obj.icon.url
+
 
 class PromoInfoSerializer(serializers.Serializer):
     """
     Вложенный объект promoInfo в ответе по товару.
-    Данные берутся из связанной модели Promotion (если есть).
-
-    promo — вычисляемый флаг активности акции (starts_at <= now <= ends_at),
-    НЕ хранится в БД.
+    promo — вычисляемый флаг (starts_at <= now <= ends_at), не хранится в БД.
     """
 
     promo = serializers.BooleanField()
@@ -50,19 +59,13 @@ class ProductSerializer(serializers.ModelSerializer):
     Сериализатор товара.
 
     Особенности контракта:
-      - categorie (строка, не id) — намеренная опечатка из фронта,
-        меняем только вместе с фронтом
+      - categorie (строка, не id) — намеренная опечатка из фронта
       - image — полный URL через SerializerMethodField
-      - promoInfo — вложенный объект, собирается из Promotion или заглушки
+      - promoInfo — вложенный объект из Promotion или заглушка
     """
 
-    # Фронт ждёт строку с названием категории, не её id
     categorie = serializers.CharField(source="category.title", read_only=True)
-
-    # Полный URL изображения (с доменом)
     image = serializers.SerializerMethodField()
-
-    # Вложенный объект акции
     promoInfo = serializers.SerializerMethodField()
 
     class Meta:
@@ -93,11 +96,8 @@ class ProductSerializer(serializers.ModelSerializer):
         """
         Собирает promoInfo из связанной Promotion.
         Если акции нет или она неактивна — возвращает заглушку с promo=False.
-
-        Обращение к obj.promotion безопасно: select_related("promotion")
-        добавлен во вьюхе, N+1 исключён.
+        select_related("promotion") во вьюхе исключает N+1.
         """
-        # Заглушка — то что фронт ждёт при promo=False
         empty: dict[str, Any] = {
             "promo": False,
             "eyebrow": "",

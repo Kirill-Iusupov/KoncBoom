@@ -1,17 +1,28 @@
 from django.contrib import admin
+from django.utils.html import format_html
 
 from .models import Category, Product, Promotion
 
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ["title", "slug", "icon", "product_count"]
+    list_display = ["title", "slug", "icon_preview", "product_count"]
     search_fields = ["title", "slug"]
     prepopulated_fields = {"slug": ("title",)}
 
     @admin.display(description="Товаров")
     def product_count(self, obj: Category) -> int:
         return obj.products.count()
+
+    @admin.display(description="Иконка")
+    def icon_preview(self, obj: Category) -> str:
+        """Показывает загруженный файл (SVG/PNG) прямо в списке категорий."""
+        if not obj.icon:
+            return "—"
+        return format_html(
+            '<img src="{}" style="height:28px;width:28px;object-fit:contain" />',
+            obj.icon.url,
+        )
 
 
 class PromotionInline(admin.StackedInline):
