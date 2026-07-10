@@ -2,8 +2,9 @@
 
 import { MainPageButton } from "@/src/shared/ui/MainPageButton";
 import ItemCard from "@/src/features/ItemCard";
-import { useProductsStore } from "@/src/pages/catalog/model/store";
+
 import { useEffect } from "react";
+import { useProductsStore } from "@/src/entities/catalog/model/store";
 
 const Popular = () => {
   const { products, getProducts, isLoading } = useProductsStore();

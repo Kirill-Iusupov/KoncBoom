@@ -1,3 +1,1 @@
-export default function Home() {
-  return <h1>KoncBoom</h1>;
-}
+export { MainPage as default } from "@/src/pages/main";
