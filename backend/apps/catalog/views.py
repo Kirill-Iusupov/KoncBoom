@@ -25,8 +25,7 @@ from .serializers import CategorySerializer, ProductSerializer
 class CategoryViewSet(ListModelMixin, RetrieveModelMixin, viewsets.GenericViewSet):
     """
     Категории товаров.
-    count — аннотация: общее количество товаров в категории,
-    независимо от stock (согласовано с product_count в Django Admin).
+    count — аннотация: ВСЕ товары в категории, независимо от stock.
     """
 
     serializer_class = CategorySerializer
@@ -34,9 +33,9 @@ class CategoryViewSet(ListModelMixin, RetrieveModelMixin, viewsets.GenericViewSe
     throttle_classes = [CatalogReadThrottle]
 
     def get_queryset(self) -> QuerySet[Category]:
-        # annotate count здесь — не делаем отдельный запрос в сериализаторе.
-        # Считаем ВСЕ товары категории (без фильтра по stock), чтобы значение
-        # совпадало с тем, что видит владелец в Django Admin.
+        # Count("products") без фильтра — считаем ВСЕ товары категории.
+        # Старый фильтр Q(products__stock__gt=0) давал count=0 для всех
+        # товаров с дефолтным stock=0.
         return Category.objects.annotate(count=Count("products")).order_by("title")
 
 
