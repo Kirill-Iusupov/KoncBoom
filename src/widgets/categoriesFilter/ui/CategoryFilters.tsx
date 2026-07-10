@@ -25,7 +25,6 @@ export const CategoryFilters = ({
     if (results.length > 0 && !active) {
       onChange(results[0].title);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [results]);
 
   return (
