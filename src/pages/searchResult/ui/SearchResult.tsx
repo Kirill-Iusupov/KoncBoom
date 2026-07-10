@@ -1,15 +1,15 @@
+"use client";
 import { Suspense } from "react";
-import { Products } from "@/src/widgets/catalog";
-import { Wrapper } from "@/src/shared/ui/Wrapper";
-import Heading from "@/src/widgets/heading";
 
-export const Catalog = () => {
+import { Wrapper } from "@/src/shared/ui/Wrapper";
+import Searching from "@/src/widgets/searching";
+
+export const SearchResult = () => {
   return (
     <div>
-      <Heading />
       <Wrapper>
         <Suspense>
-          <Products />
+          <Searching />
         </Suspense>
       </Wrapper>
     </div>
