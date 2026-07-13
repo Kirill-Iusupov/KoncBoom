@@ -1,43 +1,43 @@
 """
-Продакшн-настройки.
-Запускать с DJANGO_SETTINGS_MODULE=config.settings.prod.
+Продакшн-настройки. DJANGO_SETTINGS_MODULE=config.settings.prod
 
 Чеклист перед деплоем:
-  - DEBUG=False (задаётся здесь, не через .env)
-  - DJANGO_SECRET_KEY — длинная случайная строка (не дефолтная)
-  - DJANGO_ALLOWED_HOSTS — реальный домен
-  - CORS_ALLOWED_ORIGINS — только домен фронта
-  - POSTGRES_PASSWORD — надёжный пароль
-  - collectstatic выполнен перед стартом контейнера
+  - DEBUG=False (здесь, не через .env)
+  - DJANGO_SECRET_KEY — длинная случайная строка
+  - DJANGO_ALLOWED_HOSTS — реальный IP (фаза 1) или домен (фаза 2)
+  - CORS_ALLOWED_ORIGINS — origin фронта
+  - DJANGO_ENABLE_TLS — False на HTTP-по-IP, True на домене с сертификатом
 """
 
-from decouple import Csv, config
+from decouple import config
 
 from .base import *  # noqa: F401,F403
 from .base import SPECTACULAR_SETTINGS
 
 DEBUG = False
 
-ALLOWED_HOSTS = config("DJANGO_ALLOWED_HOSTS", cast=Csv())
+# TLS-hardening под флагом: фаза 1 (по IP, HTTP) — False, фаза 2 (домен, HTTPS) — True.
+# Так переход IP → домен не требует правок в Python, только в .env + nginx.
+ENABLE_TLS = config("DJANGO_ENABLE_TLS", default=False, cast=bool)
 
-# --- Безопасность транспорта (TLS на Nginx, Django доверяет X-Forwarded-Proto) ---
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+# TLS терминируется на Nginx; Django доверяет X-Forwarded-Proto от nginx.
+# Заголовок безопасен всегда — оставляем включённым при любом протоколе.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-SECURE_HSTS_SECONDS = 31_536_000  # 1 год
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
+# При ENABLE_TLS=False (фаза 1) редиректа на https НЕТ и куки не Secure —
+# иначе по HTTP была бы редирект-петля и не работал бы вход в админку.
+SECURE_SSL_REDIRECT = ENABLE_TLS
+SESSION_COOKIE_SECURE = ENABLE_TLS
+CSRF_COOKIE_SECURE = ENABLE_TLS
 
+SECURE_HSTS_SECONDS = 31_536_000 if ENABLE_TLS else 0  # 1 год только на HTTPS
+SECURE_HSTS_INCLUDE_SUBDOMAINS = ENABLE_TLS
+SECURE_HSTS_PRELOAD = ENABLE_TLS
+
+# Безопасны при любом протоколе:
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = "DENY"
 
-# TLS терминируется на Nginx, Django получает http внутри docker-сети.
-# Заголовок X-Forwarded-Proto=https выставляет Nginx → Django понимает что HTTPS.
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-
-# Swagger на проде закрыт — документация не должна быть публичной.
-# Раскомментируйте если хотите открыть для внутренней команды:
-# SPECTACULAR_SETTINGS["SERVE_INCLUDE_SCHEMA"] = True
+# Swagger на проде закрыт.
 SPECTACULAR_SETTINGS["SERVE_INCLUDE_SCHEMA"] = False
