@@ -1,6 +1,6 @@
 "use client"
 import { ClockCircleOutlined, PhoneOutlined } from '@ant-design/icons';
-import delivery from '@/src/shared/imgs/delivery.webp'
+import delivery from '../../../shared/imgs/delivery.webp'
 import Image from 'next/image';
 
 export const DeliveryInfo = () => {
