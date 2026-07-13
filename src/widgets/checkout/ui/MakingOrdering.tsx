@@ -15,17 +15,16 @@ type MakingOrderingProps = {
 
 export default function MakingOrdering({ singleProduct }: MakingOrderingProps) {
   const { closeModal, openModal } = useModal();
-  
-
   const { items, totalPrice, clearCart } = useCartStore();
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState(""); 
-  const [comment, setComment] = useState(""); 
-  
+  const [address, setAddress] = useState("");
+  const [comment, setComment] = useState("");
   const [client, setClient] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
 
   useEffect(() => {
     const savedName = localStorage.getItem("clientName");
@@ -55,10 +54,8 @@ export default function MakingOrdering({ singleProduct }: MakingOrderingProps) {
       return;
     }
 
-
     const body = {
-
-      idempotency_key: crypto.randomUUID(), 
+      idempotency_key: idempotencyKey,
       guest_name: name,
       guest_phone: phone,
       guest_address: address || "Самовывоз",
@@ -70,7 +67,7 @@ export default function MakingOrdering({ singleProduct }: MakingOrderingProps) {
     };
 
     try {
-      const { data } = await api.post("/orders/", body);
+      await api.post("/orders/", body);
 
       localStorage.setItem("clientName", name);
       localStorage.setItem("clientPhone", phone);
@@ -80,10 +77,12 @@ export default function MakingOrdering({ singleProduct }: MakingOrderingProps) {
       openModal(<CompletOrder />);
     } catch (err: any) {
       console.error(err);
+      
       if (err.response?.status === 200) {
-        openModal(<CompletOrder/>); 
+        openModal(<CompletOrder />);
       } else {
-        alert("Ошибка при отправке заказа");
+        const errorDetail = err.response?.data?.detail || err.response?.data?.message || JSON.stringify(err.response?.data);
+        alert(`Ошибка сервера (${err.response?.status}): ${errorDetail}`);
       }
     } finally {
       setLoading(false);
@@ -104,7 +103,6 @@ export default function MakingOrdering({ singleProduct }: MakingOrderingProps) {
       </div>
 
       <div className="w-full flex flex-col md:flex-row">
-        {/* Левая часть (Товары) */}
         {!singleProduct && (
           <div className="w-full hidden md:flex flex-col justify-between py-[80px] px-[60px] rounded-[10px] bg-[#F2F2F2]">
             <div className="h-[400px] scroll_style overflow-y-scroll pr-5 flex flex-col gap-5">
@@ -129,7 +127,6 @@ export default function MakingOrdering({ singleProduct }: MakingOrderingProps) {
           </div>
         )}
 
-        {/* Правая часть (Форма) */}
         <div className="w-full px-[20px] md:px-[80px] py-[90px] rounded-[10px] shadow-[0_0_10px_0_#00000014]">
           <p className="mb-[60px] text-center text-3xl font-extrabold">Оформление заказа</p>
           <form onSubmit={ClickAddOrder}>

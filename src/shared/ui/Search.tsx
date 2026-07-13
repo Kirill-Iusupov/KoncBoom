@@ -3,14 +3,15 @@
 import { SearchOutlined } from "@ant-design/icons";
 import { Button, Input } from "antd";
 import { useSearchStore } from "../model/store/useSearcCollapseStore";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const { Search: AntSearch } = Input;
 
-export const Search = () => {
+export const Search = ({ isMobileView }: { isMobileView?: boolean }) => {
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+console.log(isMobileView);
 
   const { collapsed, setCollapsed } = useSearchStore();
 
@@ -32,6 +33,14 @@ export const Search = () => {
     setQuery("");
     setCollapsed(true);
   };
+
+  useEffect(() => {
+    if (isMobileView) setCollapsed(true);
+}, [isMobileView, setCollapsed]);
+
+  useEffect(() => {
+    if (isMobileView) setCollapsed(true);
+}, []);
 
   return (
     <div ref={searchRef} className="flex items-center h-11.75">

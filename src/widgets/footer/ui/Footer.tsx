@@ -7,7 +7,7 @@ export const Footer = () => {
     <div className="bg-[#B6CFF9] py-12 text-[#000000]">
       <Wrapper>
         {footer_items ? (
-          <footer className="flex gap-[200px] items-center pt-[20px] pb-[95px] ">
+          <footer className="flex flex-col md:flex-row gap-10 md:gap-[200px] md:items-center pt-[20px] pb-[95px] ">
             <div className="md:h-[368px] flex  flex-col justify-between gap-6">
               <div>
                 {footer_items.logo && <div>{footer_items.logo}</div>}
