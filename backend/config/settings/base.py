@@ -154,10 +154,13 @@ CORS_ALLOW_CREDENTIALS = True
 # перекликается с акцентом витрины. Статусные цвета (зелёный/янтарный/
 # красный) заданы отдельно в дашборде и бейджах — они несут смысл.
 UNFOLD = {
-    "SITE_TITLE": "KoncBoom",
-    "SITE_HEADER": "KoncBoom",
+    "SITE_TITLE": "KancBoom",
+    "SITE_HEADER": "KancBoom",
     "SITE_SUBHEADER": _("Панель магазина"),
-    "SITE_SYMBOL": "storefront",
+    # SITE_ICON — своя SVG из статики, не зависит от Google Fonts / CDN.
+    # SITE_SYMBOL (Material Symbols) требует fonts.googleapis.com — на проде
+    # шрифт может не загружаться, из-за чего пропадает весь заголовок сайдбара.
+    "SITE_ICON": lambda request: request.build_absolute_uri("/static/admin/img/site-icon.svg"),
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": False,
     "DASHBOARD_CALLBACK": "core.admin_dashboard.dashboard_callback",
