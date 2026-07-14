@@ -96,6 +96,9 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+# Корневая папка static/ подхватывается collectstatic-ом.
+# Без этого Django ищет статику только внутри папок приложений.
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -154,8 +157,8 @@ CORS_ALLOW_CREDENTIALS = True
 # перекликается с акцентом витрины. Статусные цвета (зелёный/янтарный/
 # красный) заданы отдельно в дашборде и бейджах — они несут смысл.
 UNFOLD = {
-    "SITE_TITLE": "KancBoom",
-    "SITE_HEADER": "KancBoom",
+    "SITE_TITLE": "KoncBoom",
+    "SITE_HEADER": "KoncBoom",
     "SITE_SUBHEADER": _("Панель магазина"),
     # SITE_ICON — своя SVG из статики, не зависит от Google Fonts / CDN.
     # SITE_SYMBOL (Material Symbols) требует fonts.googleapis.com — на проде
