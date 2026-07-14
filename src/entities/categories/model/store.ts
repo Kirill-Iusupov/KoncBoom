@@ -26,9 +26,9 @@ export const useCategoriesStore = create<ICategoriesStore>((set) => ({
     try {
       const response = await api.get("/catalog/categories/");
 
-      if (response.statusText != "OK") {
-        throw new Error();
-      }
+      // if (response.statusText !== "OK") {
+      //   throw new Error();
+      // }
 
       set({ categories: response.data });
     } catch (error) {
