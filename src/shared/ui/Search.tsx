@@ -11,7 +11,7 @@ const { Search: AntSearch } = Input;
 export const Search = ({ isMobileView }: { isMobileView?: boolean }) => {
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-console.log(isMobileView);
+
 
   const { collapsed, setCollapsed } = useSearchStore();
 
