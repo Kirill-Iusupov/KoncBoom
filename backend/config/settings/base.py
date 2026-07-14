@@ -157,8 +157,8 @@ CORS_ALLOW_CREDENTIALS = True
 # перекликается с акцентом витрины. Статусные цвета (зелёный/янтарный/
 # красный) заданы отдельно в дашборде и бейджах — они несут смысл.
 UNFOLD = {
-    "SITE_TITLE": "KoncBoom",
-    "SITE_HEADER": "KoncBoom",
+    "SITE_TITLE": "KancBoom",
+    "SITE_HEADER": "KancBoom",
     "SITE_SUBHEADER": _("Панель магазина"),
     # SITE_ICON — своя SVG из статики, не зависит от Google Fonts / CDN.
     # SITE_SYMBOL (Material Symbols) требует fonts.googleapis.com — на проде
@@ -193,8 +193,6 @@ UNFOLD = {
                         "title": _("Заказы"),
                         "icon": "shopping_cart",
                         "link": reverse_lazy("admin:orders_order_changelist"),
-                        # Бейдж с числом новых заявок рядом с пунктом меню.
-                        "badge": "core.admin_dashboard.new_orders_badge",
                     },
                     {
                         "title": _("Товары"),
