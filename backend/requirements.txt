@@ -9,3 +9,6 @@ python-decouple==3.8
 
 # Обязателен для ImageField в Product.image — без него Django падает при старте
 Pillow==10.4.0
+
+# Современная тема Django Admin (сайдбар, тёмная тема, дашборд)
+django-unfold==0.96.0
