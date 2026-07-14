@@ -5,6 +5,8 @@
 from pathlib import Path
 
 from decouple import Csv, config
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -13,6 +15,10 @@ DEBUG = False
 ALLOWED_HOSTS = config("DJANGO_ALLOWED_HOSTS", default="", cast=Csv())
 
 DJANGO_APPS = [
+    # Unfold — тема админки. Обязательно ДО django.contrib.admin,
+    # иначе не переопределятся шаблоны и стили.
+    "unfold",
+    "unfold.contrib.filters",  # стилизованные виджеты фильтров в списках
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -50,7 +56,10 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        # Кастомный дашборд лежит в backend/templates/admin/index.html.
+        # DIRS ищется раньше APP_DIRS, поэтому наш шаблон переопределяет
+        # дефолтную стартовую страницу Unfold.
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -139,3 +148,70 @@ SPECTACULAR_SETTINGS = {
 
 CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS", default="", cast=Csv())
 CORS_ALLOW_CREDENTIALS = True
+
+# --- Unfold (тема админки) ---
+# Палитра primary — «чернильный индиго»: тематично для канцелярии и
+# перекликается с акцентом витрины. Статусные цвета (зелёный/янтарный/
+# красный) заданы отдельно в дашборде и бейджах — они несут смысл.
+UNFOLD = {
+    "SITE_TITLE": "KoncBoom",
+    "SITE_HEADER": "KoncBoom",
+    "SITE_SUBHEADER": _("Панель магазина"),
+    "SITE_SYMBOL": "storefront",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": False,
+    "DASHBOARD_CALLBACK": "core.admin_dashboard.dashboard_callback",
+    "COLORS": {
+        "primary": {
+            "50": "238 242 255",
+            "100": "224 231 255",
+            "200": "199 210 254",
+            "300": "165 180 252",
+            "400": "129 140 248",
+            "500": "99 102 241",
+            "600": "79 70 229",
+            "700": "67 56 202",
+            "800": "55 48 163",
+            "900": "49 46 129",
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": False,
+        "navigation": [
+            {
+                "title": _("Магазин"),
+                "separator": True,
+                "items": [
+                    {
+                        "title": _("Заказы"),
+                        "icon": "shopping_cart",
+                        "link": reverse_lazy("admin:orders_order_changelist"),
+                        # Бейдж с числом новых заявок рядом с пунктом меню.
+                        "badge": "core.admin_dashboard.new_orders_badge",
+                    },
+                    {
+                        "title": _("Товары"),
+                        "icon": "inventory_2",
+                        "link": reverse_lazy("admin:catalog_product_changelist"),
+                    },
+                    {
+                        "title": _("Категории"),
+                        "icon": "category",
+                        "link": reverse_lazy("admin:catalog_category_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Доступ"),
+                "items": [
+                    {
+                        "title": _("Пользователи"),
+                        "icon": "person",
+                        "link": reverse_lazy("admin:auth_user_changelist"),
+                    },
+                ],
+            },
+        ],
+    },
+}

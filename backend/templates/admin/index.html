@@ -1,0 +1,137 @@
+{% extends "unfold/layouts/base_simple.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Сводка" %} · KoncBoom{% endblock %}
+
+{% block content %}
+<div class="kb-dash">
+  <style>
+    /* Поверхности полупрозрачные, текст наследуется от Unfold — так
+       дашборд одинаково читается и в светлой, и в тёмной теме. */
+    .kb-dash { --kb-ink:#4f46e5; --kb-line:rgba(120,120,140,.18);
+               --kb-surface:rgba(120,120,140,.06); }
+    .kb-dash * { box-sizing:border-box; }
+    .kb-card { background:var(--kb-surface); border:1px solid var(--kb-line);
+               border-radius:16px; padding:20px; }
+    .kb-kpis { display:grid; gap:16px;
+               grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+               margin-bottom:16px; }
+    .kb-kpi { display:flex; flex-direction:column; gap:6px; text-decoration:none;
+              color:inherit; }
+    a.kb-kpi:hover { border-color:var(--kb-ink); }
+    .kb-kpi--accent { background:rgba(79,70,229,.10);
+                      border-color:rgba(79,70,229,.35); }
+    .kb-kpi__label { font-size:12px; text-transform:uppercase;
+                     letter-spacing:.06em; opacity:.6; font-weight:600; }
+    .kb-kpi__value { font-size:38px; font-weight:800; line-height:1; }
+    .kb-kpi--accent .kb-kpi__value { color:var(--kb-ink); }
+    .kb-kpi__value--sm { font-size:26px; }
+    .kb-kpi__hint { font-size:12px; opacity:.55; }
+    .kb-grid { display:grid; gap:16px; margin-bottom:16px;
+               grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); }
+    .kb-card__head { display:flex; align-items:center; justify-content:space-between;
+                     margin:0 0 12px; }
+    .kb-card__head h2 { font-size:15px; font-weight:700; margin:0; }
+    .kb-chip { font-size:12px; font-weight:600; padding:2px 8px; border-radius:999px;
+               background:var(--kb-surface); border:1px solid var(--kb-line);
+               opacity:.75; }
+    .kb-table { width:100%; border-collapse:collapse; font-size:14px; }
+    .kb-table td { padding:9px 0; border-top:1px solid var(--kb-line);
+                   vertical-align:middle; }
+    .kb-table tr:first-child td { border-top:0; }
+    .kb-sub { display:block; font-size:12px; opacity:.55; margin-top:1px; }
+    .kb-num { text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
+    .kb-stock { display:inline-block; min-width:34px; text-align:center;
+                padding:2px 8px; border-radius:999px; font-weight:700;
+                background:rgba(217,119,6,.15); color:#b45309; }
+    .kb-stock--out { background:rgba(220,38,38,.15); color:#b91c1c; }
+    .kb-badge { display:inline-block; padding:2px 9px; border-radius:999px;
+                font-size:12px; font-weight:600; color:#fff; background:var(--c,#64748b); }
+    .kb-empty { opacity:.55; font-size:14px; margin:8px 0 0; }
+    .kb-bars { display:flex; flex-direction:column; gap:12px; }
+    .kb-bar__top { display:flex; justify-content:space-between; font-size:13px;
+                   margin-bottom:5px; }
+    .kb-bar__track { height:8px; border-radius:999px; background:var(--kb-surface);
+                     overflow:hidden; }
+    .kb-bar__fill { height:100%; border-radius:999px; min-width:2px; }
+  </style>
+
+  <!-- KPI: то, ради чего владелец заходит первым делом -->
+  <div class="kb-kpis">
+    <a class="kb-card kb-kpi kb-kpi--accent" href="{{ kb_new_orders_url }}">
+      <span class="kb-kpi__label">{% trans "Новые заказы" %}</span>
+      <span class="kb-kpi__value">{{ kb_new_orders }}</span>
+      <span class="kb-kpi__hint">{% trans "ждут обработки — нажмите, чтобы открыть" %}</span>
+    </a>
+    <div class="kb-card kb-kpi">
+      <span class="kb-kpi__label">{% trans "Заказы сегодня" %}</span>
+      <span class="kb-kpi__value">{{ kb_orders_today }}</span>
+      <span class="kb-kpi__hint">{% trans "за текущий день" %}</span>
+    </div>
+    <div class="kb-card kb-kpi">
+      <span class="kb-kpi__label">{% trans "Выручка за" %} {{ kb_revenue_days }} {% trans "дней" %}</span>
+      <span class="kb-kpi__value kb-kpi__value--sm">{{ kb_revenue_30 }}</span>
+      <span class="kb-kpi__hint">{% trans "по выполненным заказам" %}</span>
+    </div>
+  </div>
+
+  <div class="kb-grid">
+    <!-- Товары на исходе -->
+    <section class="kb-card">
+      <div class="kb-card__head">
+        <h2>{% trans "Товары на исходе" %}</h2>
+        <a class="kb-chip" href="{{ kb_low_stock_url }}">{% trans "остаток" %} ≤ {{ kb_low_stock_threshold }}</a>
+      </div>
+      {% if kb_low_stock %}
+      <table class="kb-table">
+        {% for p in kb_low_stock %}
+        <tr>
+          <td><strong>{{ p.title }}</strong><span class="kb-sub">{{ p.brand }}</span></td>
+          <td class="kb-num">
+            <span class="kb-stock {% if p.stock == 0 %}kb-stock--out{% endif %}">{{ p.stock }}</span>
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}
+      <p class="kb-empty">{% trans "Все товары в достатке." %}</p>
+      {% endif %}
+    </section>
+
+    <!-- Последние заказы -->
+    <section class="kb-card">
+      <div class="kb-card__head"><h2>{% trans "Последние заказы" %}</h2></div>
+      {% if kb_recent_orders %}
+      <table class="kb-table">
+        {% for o in kb_recent_orders %}
+        <tr>
+          <td><strong>#{{ o.id }} · {{ o.name }}</strong><span class="kb-sub">{{ o.when }}</span></td>
+          <td><span class="kb-badge" style="--c:{{ o.status_color }}">{{ o.status_label }}</span></td>
+          <td class="kb-num">{{ o.total }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}
+      <p class="kb-empty">{% trans "Заказов пока нет." %}</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <!-- Разбивка по статусам -->
+  {% if kb_status_rows %}
+  <section class="kb-card">
+    <div class="kb-card__head"><h2>{% trans "Заказы по статусам" %}</h2></div>
+    <div class="kb-bars">
+      {% for s in kb_status_rows %}
+      <div>
+        <div class="kb-bar__top"><span>{{ s.label }}</span><span class="kb-num">{{ s.count }}</span></div>
+        <div class="kb-bar__track">
+          <div class="kb-bar__fill" style="width:{{ s.pct }}%;background:{{ s.color }}"></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
