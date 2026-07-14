@@ -160,11 +160,9 @@ UNFOLD = {
     "SITE_TITLE": "KancBoom",
     "SITE_HEADER": "KancBoom",
     "SITE_SUBHEADER": _("Панель магазина"),
-    # SITE_LOGO — полноразмерный логотип в шапке сайдбара.
-    # Статичная строка: Unfold просто подставит её в <img src="...">.
-    # Файл должен лежать в backend/static/admin/img/site-icon.svg
-    # и попасть в staticfiles/ через collectstatic.
-    "SITE_LOGO": "/static/admin/img/site-icon.svg",
+    # SITE_ICON — маленькая иконка рядом с названием в шапке сайдбара.
+    # Статичная строка с путём из staticfiles — без внешних зависимостей.
+    "SITE_ICON": "/static/admin/img/site-icon.svg",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": False,
     "DASHBOARD_CALLBACK": "core.admin_dashboard.dashboard_callback",
