@@ -160,10 +160,11 @@ UNFOLD = {
     "SITE_TITLE": "KancBoom",
     "SITE_HEADER": "KancBoom",
     "SITE_SUBHEADER": _("Панель магазина"),
-    # SITE_ICON — своя SVG из статики, не зависит от Google Fonts / CDN.
-    # SITE_SYMBOL (Material Symbols) требует fonts.googleapis.com — на проде
-    # шрифт может не загружаться, из-за чего пропадает весь заголовок сайдбара.
-    "SITE_ICON": lambda request: request.build_absolute_uri("/static/admin/img/site-icon.svg"),
+    # SITE_LOGO — полноразмерный логотип в шапке сайдбара.
+    # Статичная строка: Unfold просто подставит её в <img src="...">.
+    # Файл должен лежать в backend/static/admin/img/site-icon.svg
+    # и попасть в staticfiles/ через collectstatic.
+    "SITE_LOGO": "/static/admin/img/site-icon.svg",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": False,
     "DASHBOARD_CALLBACK": "core.admin_dashboard.dashboard_callback",

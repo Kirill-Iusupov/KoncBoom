@@ -1,13 +1,15 @@
-{% extends "unfold/layouts/base_simple.html" %}
+{% extends "admin/base_site.html" %}
 {% load i18n %}
 
 {% block title %}{% trans "Сводка" %} · KoncBoom{% endblock %}
 
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
 {% block content %}
 <div class="kb-dash">
   <style>
-    /* Поверхности полупрозрачные, текст наследуется от Unfold — так
-       дашборд одинаково читается и в светлой, и в тёмной теме. */
     .kb-dash { --kb-ink:#4f46e5; --kb-line:rgba(120,120,140,.18);
                --kb-surface:rgba(120,120,140,.06); }
     .kb-dash * { box-sizing:border-box; }
@@ -56,7 +58,6 @@
     .kb-bar__fill { height:100%; border-radius:999px; min-width:2px; }
   </style>
 
-  <!-- KPI: то, ради чего владелец заходит первым делом -->
   <div class="kb-kpis">
     <a class="kb-card kb-kpi kb-kpi--accent" href="{{ kb_new_orders_url }}">
       <span class="kb-kpi__label">{% trans "Новые заказы" %}</span>
@@ -76,7 +77,6 @@
   </div>
 
   <div class="kb-grid">
-    <!-- Товары на исходе -->
     <section class="kb-card">
       <div class="kb-card__head">
         <h2>{% trans "Товары на исходе" %}</h2>
@@ -98,7 +98,6 @@
       {% endif %}
     </section>
 
-    <!-- Последние заказы -->
     <section class="kb-card">
       <div class="kb-card__head"><h2>{% trans "Последние заказы" %}</h2></div>
       {% if kb_recent_orders %}
@@ -117,7 +116,6 @@
     </section>
   </div>
 
-  <!-- Разбивка по статусам -->
   {% if kb_status_rows %}
   <section class="kb-card">
     <div class="kb-card__head"><h2>{% trans "Заказы по статусам" %}</h2></div>
