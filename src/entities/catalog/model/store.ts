@@ -25,11 +25,6 @@ export const useProductsStore = create<ICatalogStore>((set) => ({
 
     try {
       const res = await api.get("/catalog/products");
-
-      // if (res.statusText !== "OK") {
-      //   throw new Error();
-      // }
-
       set({
         products: res.data,
       });

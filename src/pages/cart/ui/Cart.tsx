@@ -25,7 +25,7 @@ const Cart = () => {
 
   const startIndex = (currentPage - 1) * PAGE_SIZE;
   const currentItems = items.slice(startIndex, startIndex + PAGE_SIZE);
-console.log(currentItems);
+
 
 
   const handleCheckout = () => {

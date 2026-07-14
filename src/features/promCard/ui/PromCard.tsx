@@ -10,7 +10,7 @@ interface IPromoItemProps {
 
 export const PromCard = ({ item }: IPromoItemProps) => {
   const { promoInfo } = item;
-  console.log(promoInfo);
+  
   return (
     <div className="flex flex-col justify-between w-full md:w-[calc(25%-15px)] rounded-xl bg-[#E6EEF2] overflow-hidden">
       <div className="p-5 text-[#1E2D42]">
