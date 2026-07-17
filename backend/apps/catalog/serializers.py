@@ -3,8 +3,11 @@
 
 Контракт с фронтом:
   - categorie (строка, не id) — намеренная опечатка фронта
+  - final_price — НОВОЕ: итоговая цена с учётом активной акции.
+    Считается на бэкенде (Product.current_price) — фронт НЕ должен
+    сам вычислять скидку из price и discount, чтобы не разойтись
+    в округлении с ценой заказа.
   - promoInfo: promo, eyebrow, title, description, discount, starts_at, ends_at
-  - url убран из Promotion и из promoInfo — промо-страниц в проекте нет
   - Поля только явным списком, никогда '__all__'
 """
 
@@ -24,7 +27,6 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ["id", "title", "slug", "description", "icon", "count"]
 
     def get_icon(self, obj: Category) -> str:
-        """Абсолютный URL иконки или пустая строка."""
         if not obj.icon:
             return ""
         request = self.context.get("request")
@@ -38,6 +40,18 @@ class ProductSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
     promoInfo = serializers.SerializerMethodField()
 
+    # Итоговая цена с учётом скидки. source указывает на @property
+    # Product.current_price — DRF умеет сериализовать property через source.
+    # Формат совпадает с price (DecimalField, 2 знака) — фронту не нужно
+    # ничего конвертировать, просто сравнить price != final_price для
+    # отображения зачёркнутой цены.
+    final_price = serializers.DecimalField(
+        source="current_price",
+        max_digits=10,
+        decimal_places=2,
+        read_only=True,
+    )
+
     class Meta:
         model = Product
         fields = [
@@ -46,6 +60,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "title",
             "slug",
             "price",
+            "final_price",
             "categorie",
             "image",
             "popular",
@@ -54,7 +69,6 @@ class ProductSerializer(serializers.ModelSerializer):
         ]
 
     def get_image(self, obj: Product) -> str:
-        """Абсолютный URL изображения или пустая строка."""
         if not obj.image:
             return ""
         request = self.context.get("request")
@@ -65,8 +79,8 @@ class ProductSerializer(serializers.ModelSerializer):
     def get_promoInfo(self, obj: Product) -> dict[str, Any]:
         """
         Собирает promoInfo из Promotion.
-        Возвращает даты starts_at/ends_at в ISO 8601 (строка).
-        Если акции нет или она неактивна — promo=False, даты null.
+        discount — по-прежнему процент, для бейджа "-20%" на фронте.
+        Реальная сумма скидки — в final_price на верхнем уровне ответа.
         select_related("promotion") во вьюхе исключает N+1.
         """
         empty: dict[str, Any] = {
@@ -93,7 +107,6 @@ class ProductSerializer(serializers.ModelSerializer):
             "title": promo.title,
             "description": promo.description,
             "discount": promo.discount,
-            # ISO 8601 — фронт может отформатировать как угодно
             "starts_at": promo.starts_at.isoformat(),
             "ends_at": promo.ends_at.isoformat(),
         }

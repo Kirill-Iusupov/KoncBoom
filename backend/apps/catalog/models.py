@@ -3,13 +3,16 @@
 
 Контракт с фронтом (поля API — НЕ менять без синхронизации):
   Category : id, title, slug, description, icon, count (аннотация, не поле БД)
-  Product  : id, brand, title, slug, price, categorie (string!), image,
-             popular, stock,
+  Product  : id, brand, title, slug, price, final_price, categorie (string!),
+             image, popular, stock,
              promoInfo{promo, eyebrow, title, description, discount,
                        starts_at, ends_at}
+  final_price — НОВОЕ поле: итоговая цена с учётом активной акции.
+  price — исходная (полная) цена, не меняется.
   promoInfo.promo вычисляется по датам Promotion, не хранится как флаг.
-  url убран из Promotion — отдельных промо-страниц в проекте нет.
 """
+
+from decimal import ROUND_HALF_UP, Decimal
 
 from django.core.validators import FileExtensionValidator
 from django.db import models
@@ -97,13 +100,40 @@ class Product(models.Model):
     def __str__(self) -> str:
         return f"{self.brand} — {self.title}"
 
+    @property
+    def current_price(self) -> Decimal:
+        """
+        Итоговая цена с учётом активной акции (если есть).
+
+        ЕДИНАЯ точка расчёта скидки — используется и в API (сериализатор,
+        поле final_price), и при оформлении заказа (services.create_order).
+        Так гарантируется что цена, которую видит покупатель на сайте,
+        совпадает с ценой, которая реально спишется при заказе.
+
+        Если акции нет или она не активна — возвращает обычную price.
+        Округление до 2 знаков — ROUND_HALF_UP (стандартное округление
+        для денежных сумм, не банковское округление к чётному).
+        """
+        try:
+            promo: "Promotion" = self.promotion
+        except Promotion.DoesNotExist:
+            return self.price
+
+        if not promo.is_active:
+            return self.price
+
+        multiplier = (Decimal("100") - Decimal(promo.discount)) / Decimal("100")
+        discounted = self.price * multiplier
+        return discounted.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
 
 class Promotion(models.Model):
     """
     Промо-акция, привязанная к товару.
 
     promo в API вычисляется динамически: starts_at <= now() <= ends_at.
-    url убран — в проекте нет отдельных промо-страниц.
+    Расчёт итоговой цены — в Product.current_price, не здесь, чтобы
+    была одна точка правды для цены и в API, и в заказах.
     """
 
     product: Product = models.OneToOneField(

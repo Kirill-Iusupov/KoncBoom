@@ -10,6 +10,8 @@
   - В списке товаров: превью картинки, бейдж активной акции,
     фильтр «на акции сейчас». Быстрое редактирование цены/остатка/
     популярности прямо в списке сохранено.
+  - final_price_display — итоговая цена с учётом скидки (Product.current_price),
+    видна прямо в списке рядом с обычной ценой, для визуальной проверки расчёта.
 """
 
 from __future__ import annotations
@@ -25,8 +27,6 @@ from unfold.admin import ModelAdmin, StackedInline
 
 from .models import Category, Product, Promotion
 
-# Инлайновые стили бейджей — держим прямо в разметке, чтобы не заводить
-# отдельный статик-файл и сборку CSS ради пары значков.
 _THUMB = "height:40px;width:40px;object-fit:cover;border-radius:8px"
 _THUMB_EMPTY = (
     "height:40px;width:40px;border-radius:8px;"
@@ -40,12 +40,11 @@ _PILL = "display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px
 class CategoryAdmin(ModelAdmin):
     list_display = ["icon_preview", "title", "product_count"]
     list_display_links = ["icon_preview", "title"]
-    search_fields = ["title"]  # нужно и для autocomplete в ProductAdmin
+    search_fields = ["title"]
     prepopulated_fields = {"slug": ("title",)}
     fields = ["title", "slug", "description", "icon"]
 
     def get_queryset(self, request: HttpRequest) -> QuerySet[Category]:
-        # Аннотация вместо obj.products.count() в цикле — убирает N+1.
         return super().get_queryset(request).annotate(_product_count=Count("products"))
 
     @admin.display(description="Товаров", ordering="_product_count")
@@ -85,7 +84,7 @@ class PromotionInline(StackedInline):
     model = Promotion
     extra = 0
     verbose_name = "Акция"
-    verbose_name_plural = "Акция"  # связь 1:1 — акция всегда одна
+    verbose_name_plural = "Акция"
     fields = ["eyebrow", "title", "description", "discount", "starts_at", "ends_at"]
 
 
@@ -97,18 +96,17 @@ class ProductAdmin(ModelAdmin):
         "brand",
         "category",
         "price",
+        "final_price_display",
         "stock",
         "popular",
         "promo_badge",
     ]
     list_display_links = ["image_preview", "title"]
-    # Быстрое редактирование цены/остатка/популярности прямо из списка.
     list_editable = ["price", "stock", "popular"]
     list_filter = [OnSaleFilter, "category", "popular"]
     search_fields = ["title", "brand"]
     prepopulated_fields = {"slug": ("title",)}
     autocomplete_fields = ["category"]
-    # select_related по FK category и реверс-1:1 promotion — против N+1.
     list_select_related = ["category", "promotion"]
     inlines = [PromotionInline]
     fieldsets = [
@@ -121,6 +119,22 @@ class ProductAdmin(ModelAdmin):
         if not obj.image:
             return format_html('<div style="{}"></div>', _THUMB_EMPTY)
         return format_html('<img src="{}" style="{}" />', obj.image.url, _THUMB)
+
+    @admin.display(description="Итоговая цена")
+    def final_price_display(self, obj: Product) -> str:
+        """
+        Показывает Product.current_price — ту же цену, что видит покупатель
+        на сайте (final_price в API) и что зафиксируется в заказе.
+        Если акция не активна — совпадает с обычной price, выделение не нужно.
+        """
+        current = obj.current_price
+        if current == obj.price:
+            return mark_safe('<span style="opacity:.4">—</span>')
+        return format_html(
+            '<span style="{};background:#dcfce7;color:#166534">{} KGS</span>',
+            _PILL,
+            current,
+        )
 
     @admin.display(description="Акция")
     def promo_badge(self, obj: Product) -> str:
