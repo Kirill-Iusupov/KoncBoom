@@ -13,6 +13,13 @@ View только вызывает create_order() и возвращает рез
 Идемпотентность:
   - Если заказ с idempotency_key уже существует — возвращаем его без повторного
     списания stock. Это защита от двойного сабмита при сетевых ретраях.
+
+Скидки:
+  - unit_price фиксируется через Product.current_price (учитывает активную
+    Promotion), а не через "голую" Product.price. Раньше здесь стояла
+    product.price напрямую — это был баг: покупатель платил полную цену
+    даже во время активной акции. current_price — единая точка расчёта,
+    та же, что используется в API (ProductSerializer.final_price).
 """
 
 import uuid
@@ -72,11 +79,13 @@ def create_order(
 
     with transaction.atomic():
         # select_for_update() блокирует строки товаров до конца транзакции.
-        # Другие параллельные транзакции будут ждать снятия блокировки.
-        # nowait=False (дефолт) — ждём, не бросаем исключение сразу.
+        # select_related("promotion") — чтобы current_price не делал
+        # отдельный запрос на каждый товар (N+1) при расчёте unit_price ниже.
         products: dict[int, Product] = {
             p.pk: p
-            for p in Product.objects.select_for_update().filter(pk__in=product_ids)
+            for p in Product.objects.select_related("promotion")
+            .select_for_update()
+            .filter(pk__in=product_ids)
         }
 
         # Проверяем наличие всех товаров
@@ -120,8 +129,12 @@ def create_order(
             product = products[item["product_id"]]
             qty = item["quantity"]
 
-            # Фиксируем цену на момент заказа (snapshot)
-            unit_price: Decimal = product.price
+            # Фиксируем ИТОГОВУЮ цену (с учётом активной акции) на момент
+            # заказа — snapshot. Это current_price, не "голая" price.
+            # Если завтра акция закончится или админ изменит скидку —
+            # цена в уже оформленном заказе не изменится (она уже сохранена
+            # в unit_price конкретной OrderItem).
+            unit_price: Decimal = product.current_price
 
             order_items.append(
                 OrderItem(
