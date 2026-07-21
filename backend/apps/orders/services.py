@@ -16,10 +16,18 @@ View только вызывает create_order() и возвращает рез
 
 Скидки:
   - unit_price фиксируется через Product.current_price (учитывает активную
-    Promotion), а не через "голую" Product.price. Раньше здесь стояла
-    product.price напрямую — это был баг: покупатель платил полную цену
-    даже во время активной акции. current_price — единая точка расчёта,
-    та же, что используется в API (ProductSerializer.final_price).
+    Promotion), а не через "голую" Product.price. current_price — единая
+    точка расчёта, та же, что используется в API (ProductSerializer.final_price).
+
+select_for_update() + select_related("promotion"):
+  - Promotion — необязательная обратная OneToOne-связь (не у каждого товара
+    есть акция), поэтому select_related строит LEFT OUTER JOIN.
+    PostgreSQL запрещает `SELECT ... FOR UPDATE` поверх LEFT OUTER JOIN
+    («FOR UPDATE cannot be applied to the nullable side of an outer join»),
+    и падает с ошибкой для ЛЮБОГО товара, независимо от наличия акции.
+    Решение — of=("self",): блокируем FOR UPDATE только таблицу Product,
+    Promotion в блокировку не попадает, но JOIN для select_related остаётся
+    рабочим (N+1 по-прежнему не возникает).
 """
 
 import uuid
@@ -78,13 +86,15 @@ def create_order(
     product_ids = [item["product_id"] for item in items]
 
     with transaction.atomic():
-        # select_for_update() блокирует строки товаров до конца транзакции.
-        # select_related("promotion") — чтобы current_price не делал
-        # отдельный запрос на каждый товар (N+1) при расчёте unit_price ниже.
+        # select_for_update(of=("self",)) блокирует ТОЛЬКО таблицу Product.
+        # select_related("promotion") оставляет LEFT OUTER JOIN для чтения
+        # (нужен для current_price без доп. запроса), но без of=("self",)
+        # PostgreSQL падает: "FOR UPDATE cannot be applied to the nullable
+        # side of an outer join" — Promotion не у каждого товара есть.
         products: dict[int, Product] = {
             p.pk: p
             for p in Product.objects.select_related("promotion")
-            .select_for_update()
+            .select_for_update(of=("self",))
             .filter(pk__in=product_ids)
         }
 
@@ -130,10 +140,7 @@ def create_order(
             qty = item["quantity"]
 
             # Фиксируем ИТОГОВУЮ цену (с учётом активной акции) на момент
-            # заказа — snapshot. Это current_price, не "голая" price.
-            # Если завтра акция закончится или админ изменит скидку —
-            # цена в уже оформленном заказе не изменится (она уже сохранена
-            # в unit_price конкретной OrderItem).
+            # заказа — snapshot.
             unit_price: Decimal = product.current_price
 
             order_items.append(

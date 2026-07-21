@@ -5,6 +5,8 @@ View — только маршрутизация, валидация через 
 Вся бизнес-логика (atomic, stock, idempotency) — в services.py.
 """
 
+import logging
+
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.request import Request
@@ -16,6 +18,8 @@ from core.throttles import OrderCreateThrottle
 from .models import Order
 from .serializers import OrderCreateSerializer, OrderOutputSerializer
 from .services import InsufficientStockError, create_order
+
+logger = logging.getLogger(__name__)
 
 
 class OrderCreateView(APIView):
@@ -67,7 +71,13 @@ class OrderCreateView(APIView):
                 status=status.HTTP_409_CONFLICT,
             )
         except Exception:
-            # Непредвиденная ошибка — не роняем сервер, возвращаем 500
+            # Непредвиденная ошибка — не роняем сервер, возвращаем 500.
+            # logger.exception пишет полный traceback в логи gunicorn/docker —
+            # без этого причина 500 была видна только по slовам "internal_error",
+            # что делает диагностику вслепую. Traceback смотреть через:
+            # docker compose logs backend
+            logger.exception("Не удалось создать заказ (idempotency_key=%s)",
+                              data.get("idempotency_key"))
             return Response(
                 {"error": "internal_error", "detail": "Не удалось создать заказ."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
