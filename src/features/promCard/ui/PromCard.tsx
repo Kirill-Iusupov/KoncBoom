@@ -1,7 +1,6 @@
 "use client";
 
 import { Product } from "@/src/shared/model/types";
-import Link from "next/link";
 import { PromoTimer } from "../../promoTimer";
 
 interface IPromoItemProps {
@@ -10,7 +9,7 @@ interface IPromoItemProps {
 
 export const PromCard = ({ item }: IPromoItemProps) => {
   const { promoInfo } = item;
-  
+
   return (
     <div className="flex flex-col justify-between w-full md:w-[calc(25%-15px)] rounded-xl bg-[#E6EEF2] overflow-hidden">
       <div className="p-5 text-[#1E2D42]">
@@ -29,13 +28,6 @@ export const PromCard = ({ item }: IPromoItemProps) => {
       </div>
 
       <div className="flex items-center justify-center bg-[#D3D3D3] px-5 py-4">
-        {/* <Link
-          href={"/"}
-          className="rounded-lg bg-[#F59E0B] px-6 py-3 font-bold border-[1px_1px_4px_1px] border-[#D97706]"
-        >
-          Перейти
-        </Link> */}
-
         <span className="text-4xl font-extrabold text-red-600">
           -{promoInfo.discount}%
         </span>
