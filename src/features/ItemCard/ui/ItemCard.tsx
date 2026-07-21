@@ -55,9 +55,7 @@ export const ItemCard = ({ item }: IItemProps) => {
   const oldPrice = Math.abs(Number(item.price));
 
   // Акция активна, если есть флаг promo и итоговая цена меньше обычной
-  const isPromo = Boolean(
-    item.promoInfo?.promo && displayPrice < oldPrice
-  );
+  const isPromo = Boolean(item.promoInfo?.promo && displayPrice < oldPrice);
 
   // Получаем строку времени до конца акции
   const timeLeft = useCountdown(isPromo ? item.promoInfo?.ends_at : undefined);
@@ -85,13 +83,19 @@ export const ItemCard = ({ item }: IItemProps) => {
             СКИДКА
           </div>
         )}
-
-        <img
+        <div
+          className="absolute inset-0 w-full h-full object-cover bg-no-repeat"
+          style={{
+            backgroundImage: `url(${item.image})`,
+            backgroundSize: "contain",
+            backgroundPosition: "center",
+          }}
+        />
+        {/* <img
           src={item.image}
           alt={item.title}
           className="absolute inset-0 w-full h-full object-cover"
-        />
-
+        /> */}
         {isOutOfStock && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20">
             <span className="text-white font-medium bg-black/60 px-3 py-1 rounded-full text-sm">
