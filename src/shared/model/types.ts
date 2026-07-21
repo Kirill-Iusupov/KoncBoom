@@ -24,6 +24,7 @@ export type Product = {
   image: string;
   popular: boolean;
   price: string;
+  final_price: string;
   promoInfo: IPromoInfo;
   slug: string;
   stock: number;

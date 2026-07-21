@@ -16,7 +16,8 @@ export default function CardOrderingCart({ product }: Props) {
   const { openModal } = useModal();
 
 
-  const displayPrice = Math.abs(Number(product.price));
+  // const displayPrice = Math.abs(Number(product.price));
+  const displayPrice = Math.abs(Number(product.price || 0)) || 0;
 
 
   const handleDeleteClick = () => {

@@ -23,7 +23,7 @@ export default function MakingOrdering({ singleProduct }: MakingOrderingProps) {
   const [comment, setComment] = useState("");
   const [client, setClient] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+
   const [idempotencyKey] = useState(() => crypto.randomUUID());
 
   useEffect(() => {
@@ -77,7 +77,7 @@ export default function MakingOrdering({ singleProduct }: MakingOrderingProps) {
       openModal(<CompletOrder />);
     } catch (err: any) {
       console.error(err);
-      
+
       if (err.response?.status === 200) {
         openModal(<CompletOrder />);
       } else {
@@ -88,6 +88,8 @@ export default function MakingOrdering({ singleProduct }: MakingOrderingProps) {
       setLoading(false);
     }
   };
+
+
 
   if (!client) return null;
 
@@ -114,21 +116,25 @@ export default function MakingOrdering({ singleProduct }: MakingOrderingProps) {
                 <p>Корзина пуста</p>
               )}
             </div>
-            
+
             <div className="w-full text-lg flex gap-4 flex-col pt-[45px]">
               <div className="w-full flex items-center gap-2">
                 <p className="whitespace-nowrap">Итого</p>
                 <p className="text-black overflow-hidden whitespace-nowrap tracking-[5px]">
                   .................................
                 </p>
-                <p className="text-[18px] whitespace-nowrap">{totalPrice} сом</p>
+                <p className="text-[18px] whitespace-nowrap">
+                  {totalPrice} сом
+                </p>
               </div>
             </div>
           </div>
         )}
 
         <div className="w-full px-[20px] md:px-[80px] py-[90px] rounded-[10px] shadow-[0_0_10px_0_#00000014]">
-          <p className="mb-[60px] text-center text-3xl font-extrabold">Оформление заказа</p>
+          <p className="mb-[60px] text-center text-3xl font-extrabold">
+            Оформление заказа
+          </p>
           <form onSubmit={ClickAddOrder}>
             <div className="w-full flex flex-col gap-5">
               <input
@@ -154,7 +160,7 @@ export default function MakingOrdering({ singleProduct }: MakingOrderingProps) {
                 onChange={(e) => setAddress(e.target.value)}
                 type="text"
               />
-               <textarea
+              <textarea
                 className="w-full rounded-[10px] border-gray-300 border-2 px-5 py-4 outline-none focus:border-black resize-none"
                 placeholder="Комментарий к заказу (необязательно)"
                 value={comment}
