@@ -42,7 +42,7 @@ const Cart = () => {
             disabled={items.length === 0}
             className="px-[15px] cursor-pointer text-white bg-[#5E5E5E] h-[36px] rounded-[24px] active:translate-y-[2px] disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
           >
-            Отчистить всю корзину
+            Очистить всю корзину
           </button>
         </div>
 
