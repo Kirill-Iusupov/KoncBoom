@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "KoncBoom",
+  title: "KantsBum",
   description: "Всё для творчества и работы",
 };
 
