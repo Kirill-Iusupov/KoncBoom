@@ -18,13 +18,34 @@ export default function MakingOrdering({ singleProduct }: MakingOrderingProps) {
   const { items, totalPrice, clearCart } = useCartStore();
 
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState<string>("");
   const [address, setAddress] = useState("");
   const [comment, setComment] = useState("");
   const [client, setClient] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const [idempotencyKey] = useState(() => crypto.randomUUID());
+
+const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  let value = e.target.value;
+
+  let rawDigits = value.replace(/\D/g, "");
+
+  if (rawDigits.startsWith("996")) {
+    rawDigits = rawDigits.slice(3);
+  }
+
+  rawDigits = rawDigits.slice(0, 9);
+
+
+  if (!rawDigits) {
+    setPhone("");
+    return;
+  }
+
+  const formattedDigits = rawDigits.replace(/(\d{3})(?=\d)/g, "$1 ");
+  setPhone(`+996 ${formattedDigits}`);
+};
 
   useEffect(() => {
     const savedName = localStorage.getItem("clientName");
@@ -81,15 +102,16 @@ export default function MakingOrdering({ singleProduct }: MakingOrderingProps) {
       if (err.response?.status === 200) {
         openModal(<CompletOrder />);
       } else {
-        const errorDetail = err.response?.data?.detail || err.response?.data?.message || JSON.stringify(err.response?.data);
+        const errorDetail =
+          err.response?.data?.detail ||
+          err.response?.data?.message ||
+          JSON.stringify(err.response?.data);
         alert(`Ошибка сервера (${err.response?.status}): ${errorDetail}`);
       }
     } finally {
       setLoading(false);
     }
   };
-
-
 
   if (!client) return null;
 
@@ -149,8 +171,9 @@ export default function MakingOrdering({ singleProduct }: MakingOrderingProps) {
                 className="w-full rounded-[10px] border-gray-300 border-2 px-5 py-4 outline-none focus:border-black"
                 placeholder="+996 500 500 500"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={handlePhoneChange}
                 type="tel"
+                inputMode="tel"
                 required
               />
               <input
