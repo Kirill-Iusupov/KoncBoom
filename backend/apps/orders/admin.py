@@ -5,11 +5,16 @@
   - Unfold ModelAdmin.
   - Устранён N+1: число позиций и сумма заказа — аннотациями в get_queryset,
     а не .count()/суммой в цикле.
-  - Убран дубль статуса (раньше статус показывался и полем, и цветным
-    бейджем). Оставлен один редактируемый селект — владелец меняет статус
-    заявки прямо из списка (new -> confirmed -> done).
+  - Убран дубль статуса. Оставлен один редактируемый селект — владелец
+    меняет статус заявки прямо из списка (new -> confirmed -> done).
   - Добавлена колонка суммы заказа (в сомах) и навигация по датам.
   - Позиции заказа — только для чтения (снимок цены на момент покупки).
+  - ClickableRowAdminMixin + расширенный list_display_links — переход
+    в заказ теперь работает по клику на всю строку, а не только по id.
+  - Возврат stock при отмене/удалении заказа — см. signals.py и
+    services.restore_stock_for_order(). stock_restored показан в
+    служебном разделе формы для прозрачности (виден администратору,
+    но не редактируется).
 """
 
 from __future__ import annotations
@@ -24,6 +29,7 @@ from django.utils.html import format_html
 
 from unfold.admin import ModelAdmin, TabularInline
 
+from core.admin import ClickableRowAdminMixin
 from core.utils import format_kgs
 
 from .models import Order, OrderItem
@@ -47,7 +53,7 @@ class OrderItemInline(TabularInline):
 
 
 @admin.register(Order)
-class OrderAdmin(ModelAdmin):
+class OrderAdmin(ClickableRowAdminMixin, ModelAdmin):
     list_display = [
         "order_ref",
         "status",
@@ -56,11 +62,15 @@ class OrderAdmin(ModelAdmin):
         "guest_phone",
         "created_at",
     ]
-    list_display_links = ["order_ref"]
+    # Раньше был кликабелен только order_ref (по сути — id). Теперь клик
+    # работает на всю строку через ClickableRowAdminMixin — эти колонки
+    # определяют КУДА ведёт ссылка (Django требует хотя бы одну), но
+    # фактическая кликабельная область — вся строка целиком.
+    list_display_links = ["order_ref", "order_total", "items_count", "guest_phone", "created_at"]
     list_editable = ["status"]  # смена статуса заявки прямо из списка
     list_filter = ["status", "created_at"]
     search_fields = ["guest_name", "guest_phone", "guest_address"]
-    readonly_fields = ["idempotency_key", "created_at", "updated_at"]
+    readonly_fields = ["idempotency_key", "created_at", "updated_at", "stock_restored"]
     date_hierarchy = "created_at"
     ordering = ["-created_at"]
     inlines = [OrderItemInline]
@@ -74,14 +84,18 @@ class OrderAdmin(ModelAdmin):
         (
             "Служебное",
             {
-                "fields": ["idempotency_key", "created_at", "updated_at"],
+                "fields": [
+                    "idempotency_key",
+                    "stock_restored",
+                    "created_at",
+                    "updated_at",
+                ],
                 "classes": ["collapse"],
             },
         ),
     ]
 
     def get_queryset(self, request: HttpRequest) -> QuerySet[Order]:
-        # Число позиций и сумма — одной аннотацией на весь список.
         return (
             super()
             .get_queryset(request)

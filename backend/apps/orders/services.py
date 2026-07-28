@@ -22,12 +22,16 @@ View только вызывает create_order() и возвращает рез
 select_for_update() + select_related("promotion"):
   - Promotion — необязательная обратная OneToOne-связь (не у каждого товара
     есть акция), поэтому select_related строит LEFT OUTER JOIN.
-    PostgreSQL запрещает `SELECT ... FOR UPDATE` поверх LEFT OUTER JOIN
-    («FOR UPDATE cannot be applied to the nullable side of an outer join»),
-    и падает с ошибкой для ЛЮБОГО товара, независимо от наличия акции.
-    Решение — of=("self",): блокируем FOR UPDATE только таблицу Product,
-    Promotion в блокировку не попадает, но JOIN для select_related остаётся
-    рабочим (N+1 по-прежнему не возникает).
+    PostgreSQL запрещает `SELECT ... FOR UPDATE` поверх LEFT OUTER JOIN,
+    решение — of=("self",): блокируем FOR UPDATE только таблицу Product.
+
+Возврат stock (restore_stock_for_order):
+  - Вызывается из apps/orders/signals.py при отмене заказа (смена статуса
+    на "cancelled") и при удалении заказа (админка, ORM). Используем
+    F('stock') + qty — тот же атомарный паттерн, что и при списании,
+    чтобы не потерять инкремент при параллельном заказе того же товара.
+  - Идемпотентность обеспечивает вызывающий код (сигналы проверяют
+    order.stock_restored перед вызовом) — сама функция это не проверяет.
 """
 
 import uuid
@@ -76,7 +80,6 @@ def create_order(
         InsufficientStockError — если stock < quantity для любого товара.
         Product.DoesNotExist   — если product_id не найден.
     """
-    # Быстрая проверка на дубль ДО открытия транзакции — экономим блокировки.
     try:
         existing = Order.objects.get(idempotency_key=idempotency_key)
         return existing, False
@@ -86,11 +89,6 @@ def create_order(
     product_ids = [item["product_id"] for item in items]
 
     with transaction.atomic():
-        # select_for_update(of=("self",)) блокирует ТОЛЬКО таблицу Product.
-        # select_related("promotion") оставляет LEFT OUTER JOIN для чтения
-        # (нужен для current_price без доп. запроса), но без of=("self",)
-        # PostgreSQL падает: "FOR UPDATE cannot be applied to the nullable
-        # side of an outer join" — Promotion не у каждого товара есть.
         products: dict[int, Product] = {
             p.pk: p
             for p in Product.objects.select_related("promotion")
@@ -98,13 +96,11 @@ def create_order(
             .filter(pk__in=product_ids)
         }
 
-        # Проверяем наличие всех товаров
         for item in items:
             pid = item["product_id"]
             if pid not in products:
                 raise Product.DoesNotExist(f"Товар с id={pid} не найден.")
 
-        # Проверяем stock ДО списания — даём понятную ошибку клиенту
         for item in items:
             product = products[item["product_id"]]
             qty = item["quantity"]
@@ -115,7 +111,6 @@ def create_order(
                     requested=qty,
                 )
 
-        # Создаём заказ
         try:
             order = Order.objects.create(
                 idempotency_key=idempotency_key,
@@ -125,22 +120,13 @@ def create_order(
                 comment=comment,
             )
         except IntegrityError:
-            # Гонка: между нашей проверкой выше и созданием другой запрос
-            # с тем же ключом успел создать заказ. Возвращаем существующий.
             existing = Order.objects.get(idempotency_key=idempotency_key)
             return existing, False
 
-        # Создаём позиции и списываем stock атомарно через F-выражение.
-        # F('stock') - qty выполняется как UPDATE ... SET stock = stock - qty
-        # прямо в SQL — Python-уровень не читает текущее значение stock,
-        # поэтому нет window между SELECT и UPDATE (TOCTOU race condition).
         order_items = []
         for item in items:
             product = products[item["product_id"]]
             qty = item["quantity"]
-
-            # Фиксируем ИТОГОВУЮ цену (с учётом активной акции) на момент
-            # заказа — snapshot.
             unit_price: Decimal = product.current_price
 
             order_items.append(
@@ -152,8 +138,6 @@ def create_order(
                 )
             )
 
-            # Атомарное списание — CHECK constraint stock>=0 на уровне БД
-            # является последним рубежом защиты от ухода в минус.
             Product.objects.filter(pk=product.pk).update(
                 stock=F("stock") - qty
             )
@@ -161,3 +145,40 @@ def create_order(
         OrderItem.objects.bulk_create(order_items)
 
     return order, True
+
+
+def restore_stock_for_order(order: Order) -> None:
+    """
+    Возвращает списанный stock по всем позициям заказа.
+
+    Вызывается при отмене заказа (переход в статус "cancelled") и при
+    удалении заказа — из сигналов в apps/orders/signals.py, которые сами
+    проверяют order.stock_restored перед вызовом (эта функция ничего
+    не проверяет и не помечает флаг — только увеличивает stock).
+
+    F('stock') + qty — атомарная SQL-операция, не читает текущее
+    значение в Python, поэтому безопасна при параллельных операциях
+    с тем же товаром (например, кто-то оформляет новый заказ в этот
+    момент).
+    """
+    items = list(order.items.values("product_id", "quantity"))
+    if not items:
+        return
+
+    product_ids = [i["product_id"] for i in items]
+
+    with transaction.atomic():
+        # Блокируем строки товаров перед инкрементом — тот же паттерн,
+        # что и в create_order, но в обратную сторону (+qty вместо -qty).
+        # of=("self",) не обязателен здесь (нет select_related), но оставлен
+        # для единообразия с create_order на случай будущих правок.
+        list(
+            Product.objects.select_for_update(of=("self",)).filter(
+                pk__in=product_ids
+            )
+        )
+
+        for i in items:
+            Product.objects.filter(pk=i["product_id"]).update(
+                stock=F("stock") + i["quantity"]
+            )

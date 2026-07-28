@@ -10,6 +10,11 @@
   - Списание stock происходит в сервисном слое (services.py) через
     transaction.atomic() + select_for_update() + F('stock') - qty
   - CHECK constraint stock >= 0 уже есть на уровне БД (миграция catalog)
+
+Возврат stock при отмене/удалении:
+  - stock_restored — защита от двойного возврата остатка. Например если
+    заказ отменили, а потом ещё и удалили — stock должен вернуться ОДИН
+    раз, а не дважды. Проставляется в apps/orders/signals.py.
 """
 
 import uuid
@@ -53,6 +58,16 @@ class Order(models.Model):
     )
 
     comment: str = models.TextField("Комментарий", blank=True, default="")
+
+    # Защита от двойного возврата остатка (отмена + последующее удаление
+    # не должны вернуть stock дважды). Не показывается покупателю,
+    # только служебное поле для админки/сигналов.
+    stock_restored: bool = models.BooleanField(
+        "Остаток возвращён",
+        default=False,
+        editable=False,
+        help_text="Внутренний флаг: stock уже был возвращён при отмене/удалении.",
+    )
 
     created_at: models.DateTimeField = models.DateTimeField(
         "Создан", auto_now_add=True

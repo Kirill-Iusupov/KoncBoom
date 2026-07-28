@@ -11,7 +11,11 @@
     фильтр «на акции сейчас». Быстрое редактирование цены/остатка/
     популярности прямо в списке сохранено.
   - final_price_display — итоговая цена с учётом скидки (Product.current_price),
-    видна прямо в списке рядом с обычной ценой, для визуальной проверки расчёта.
+    видна прямо в списке рядом с обычной ценой. Формат — format_kgs()
+    (общий хелпер "1 234 сом"), раньше здесь было "{} KGS" — несогласованно
+    с остальной админкой (заказы уже использовали сом).
+  - ClickableRowAdminMixin + расширенный list_display_links — переход
+    в объект по клику на всю строку, а не только по узкой ссылке.
 """
 
 from __future__ import annotations
@@ -25,6 +29,9 @@ from django.utils.safestring import mark_safe
 
 from unfold.admin import ModelAdmin, StackedInline
 
+from core.admin import ClickableRowAdminMixin
+from core.utils import format_kgs
+
 from .models import Category, Product, Promotion
 
 _THUMB = "height:40px;width:40px;object-fit:cover;border-radius:8px"
@@ -37,9 +44,11 @@ _PILL = "display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px
 
 
 @admin.register(Category)
-class CategoryAdmin(ModelAdmin):
+class CategoryAdmin(ClickableRowAdminMixin, ModelAdmin):
     list_display = ["icon_preview", "title", "product_count"]
-    list_display_links = ["icon_preview", "title"]
+    # Ни одно поле не в list_editable — можно сделать кликабельными все
+    # колонки. Фактическая область клика — вся строка (ClickableRowAdminMixin).
+    list_display_links = ["icon_preview", "title", "product_count"]
     search_fields = ["title"]
     prepopulated_fields = {"slug": ("title",)}
     fields = ["title", "slug", "description", "icon"]
@@ -89,7 +98,7 @@ class PromotionInline(StackedInline):
 
 
 @admin.register(Product)
-class ProductAdmin(ModelAdmin):
+class ProductAdmin(ClickableRowAdminMixin, ModelAdmin):
     list_display = [
         "image_preview",
         "title",
@@ -101,7 +110,18 @@ class ProductAdmin(ModelAdmin):
         "popular",
         "promo_badge",
     ]
-    list_display_links = ["image_preview", "title"]
+    # price, stock, popular — в list_editable, их нельзя одновременно
+    # включить в list_display_links (ограничение Django). Остальные
+    # колонки кликабельны, а благодаря ClickableRowAdminMixin реально
+    # кликабельна вся строка целиком.
+    list_display_links = [
+        "image_preview",
+        "title",
+        "brand",
+        "category",
+        "final_price_display",
+        "promo_badge",
+    ]
     list_editable = ["price", "stock", "popular"]
     list_filter = [OnSaleFilter, "category", "popular"]
     search_fields = ["title", "brand"]
@@ -131,9 +151,9 @@ class ProductAdmin(ModelAdmin):
         if current == obj.price:
             return mark_safe('<span style="opacity:.4">—</span>')
         return format_html(
-            '<span style="{};background:#dcfce7;color:#166534">{} KGS</span>',
+            '<span style="{};background:#dcfce7;color:#166534">{}</span>',
             _PILL,
-            current,
+            format_kgs(current),
         )
 
     @admin.display(description="Акция")
