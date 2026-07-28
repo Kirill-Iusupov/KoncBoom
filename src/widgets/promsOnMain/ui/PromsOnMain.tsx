@@ -17,11 +17,16 @@ const PromsOnMain = () => {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-[24px] font-bold text-black">Акции</h3>
-          <p>Актуальные предложения — только ограниченное время</p>
-        </div>
-       {pathname === 'promotions' &&  <MainPageButton title="Смотреть все акции" url="promotions" />}
+        {pathname !== "/promotions" ? (
+          <>
+            <div>
+              <h3 className="text-[24px] font-bold text-black">Акции</h3>
+              <p>Актуальные предложения — только ограниченное время</p>
+            </div>
+
+            <MainPageButton title="Смотреть все акции" url="promotions" />
+          </>
+        ) : null}
       </div>
       {promoItems.length <= 0 ? (
         <EmptyPromos />

@@ -4,7 +4,7 @@ import { Wrapper } from "@/src/shared/ui/Wrapper";
 import { Discounts } from "@/src/widgets/discounts";
 import Heading from "@/src/widgets/heading";
 import { PromsOnMain } from "@/src/widgets/promsOnMain";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 
 export const Promotions = () => {
   const { getProducts, isLoading } = useProductsStore();
@@ -12,6 +12,7 @@ export const Promotions = () => {
   useEffect(() => {
     getProducts();
   }, []);
+
   return (
     <div>
       <Heading />
