@@ -150,9 +150,9 @@ export default function CartCard({ product }: TypeCartCardProps) {
       <button
         type="button"
         onClick={handleDeleteClick}
-        className="absolute bottom-[20px] top-[20px] right-[20px] 
+        className="absolute bottom-[65px] md:bottom-[20px] md:top-[20px] right-[20px] 
                    bg-[#F59E0B] border-t-[1px] border-r-[1px] border-b-[4px] border-l-[1px] border-[#D97706]
-                   rounded-md md:w-[100px] h-[48px] px-5 cursor-pointer
+                   rounded-md md:w-[100px] h-[48px] px-2 md:px-5 cursor-pointer
                   transition-all group hover:bg-[#D97706] active:translate-y-[2px] "
       >
         <DeleteOutlined className="pt-1 text-[25px]" />
