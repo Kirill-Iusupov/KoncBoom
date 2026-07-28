@@ -3,28 +3,31 @@
 import { usePathname } from "next/navigation";
 import { Wrapper } from "../../../shared/ui/Wrapper";
 import { heading_items } from "../model/heading.mock";
+import heading from '@/src/shared/imgs/heading.webp'
 
 const Heading = () => {
   const pathname = usePathname();
   const currentHeading = heading_items.find((e) => e.link === pathname);
-
   if (!currentHeading) return null;
-
+// bg-[linear-gradient(90deg,_#5F72BD_0%,_#9B23EA_100%)]
   return (
-    <div className="w-full py-[40px] bg-[linear-gradient(90deg,_#5F72BD_0%,_#9B23EA_100%)] text-white">
+    <div className="w-full   text-white  bg-cover bg-center"
+    style={{ backgroundImage: `url(${heading.src})`}}
+    >
+    <div className="h-full py-[40px]  backdrop-filter-[blur(3px)]">
       <Wrapper>
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-8">
           <div className={currentHeading.stats ? "lg:max-w-[60%]" : "w-full"}>
             {currentHeading.main_info && (
-              <h3 className="text-[#D10000] uppercase font-semibold text-sm tracking-wider mb-2">
+              <h3 className="text-white [text-shadow:0px_0px_10px_#838383] uppercase font-semibold text-sm tracking-wider mb-2">
                 {currentHeading.main_info}
               </h3>
             )}
-            <h2 className="text-[64px] md:text-[96px] font-semibold leading-tight mb-4">
+            <h2 className="text-[64px] md:text-[96px] font-semibold leading-tight [text-shadow:0px_0px_10px_#838383]">
               {currentHeading.title}
             </h2>
             {currentHeading.extra_info && (
-              <p className="font-medium text-[#CCCCCC] text-base md:text-lg leading-relaxed">
+              <p className="font-medium  text-base md:text-lg leading-relaxed  [text-shadow:0px_0px_10px_#838383]">
                 {currentHeading.extra_info}
               </p>
             )}
@@ -49,6 +52,7 @@ const Heading = () => {
           )}
         </div>
       </Wrapper>
+        </div>
     </div>
   );
 };
