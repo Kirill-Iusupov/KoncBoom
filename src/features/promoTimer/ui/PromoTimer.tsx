@@ -62,7 +62,7 @@ export const PromoTimer = ({ start, end }: ITimerProps) => {
   }
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 mt-4">
       <TimeBlock value={timeLeft.hours} label="Часов" />
       <TimeBlock value={timeLeft.minutes} label="Минут" />
       <TimeBlock value={timeLeft.seconds} label="Секунд" />

@@ -12,11 +12,11 @@ export const TimeBlock = ({
 
 
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl bg-[#1E2D42] px-4 py-2.5 min-w-[70px]">
-      <span className="text-2xl font-bold text-white leading-tight">
+    <div className="flex flex-col items-center justify-center rounded-xl bg-brand-ink px-3.5 py-2 min-w-[64px]">
+      <span className="font-num text-xl font-semibold text-white leading-tight">
         {pad(value)}
       </span>
-      <span className="text-xs text-slate-300">{label}</span>
+      <span className="text-[11px] text-white/60">{label}</span>
     </div>
   );
 };

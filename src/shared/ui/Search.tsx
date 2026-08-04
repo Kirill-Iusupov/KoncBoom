@@ -12,7 +12,6 @@ export const Search = ({ isMobileView }: { isMobileView?: boolean }) => {
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-
   const { collapsed, setCollapsed } = useSearchStore();
 
   const [query, setQuery]: [string, (data: string) => void] = useState("");
@@ -36,17 +35,17 @@ export const Search = ({ isMobileView }: { isMobileView?: boolean }) => {
 
   useEffect(() => {
     if (isMobileView) setCollapsed(true);
-}, [isMobileView, setCollapsed]);
+  }, [isMobileView, setCollapsed]);
 
   useEffect(() => {
     if (isMobileView) setCollapsed(true);
-}, []);
+  }, []);
 
   return (
     <div ref={searchRef} className="flex items-center h-11.75">
       {collapsed ? (
         <button onClick={() => setCollapsed(false)} className="h-full">
-          <div className="flex items-center justify-center w-14.75 rounded-md h-full bg-[#D9EEFF] cursor-pointer">
+          <div className="flex items-center justify-center w-11.75 rounded-full h-full border border-brand-border text-brand-muted hover:border-brand-ink/30 hover:text-brand-ink transition-colors cursor-pointer">
             <SearchOutlined />
           </div>
         </button>
@@ -58,12 +57,12 @@ export const Search = ({ isMobileView }: { isMobileView?: boolean }) => {
           onChange={(e) => setQuery(e.target.value)}
           onPressEnter={handleSearch}
           onBlur={handleBlur}
-          className="absolute bg-[#D9EEFF] rounded-md border-none w-full h-full top-0 right-0"
-          placeholder="Поиск по концелярии..."
+          className="absolute !bg-brand-blue-tint !rounded-full border-[1px solid black] w-full h-full top-0 right-0 overflow-hidden"
+          placeholder="Поиск по канцелярии..."
           enterButton={
             <Button
               onClick={handleSearch}
-              className="bg-[#D9EEFF] w-14.75 h-full border-none hover:border-none"
+              className="!bg-brand-blue-tint w-14.75 h-full border-none hover:border-none"
               icon={<SearchOutlined />}
             />
           }

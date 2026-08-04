@@ -72,14 +72,14 @@ export const ItemCard = ({ item }: IItemProps) => {
 
   return (
     <div
-      className={`w-full md:w-[calc(25%-15px)] overflow-hidden rounded-3xl flex flex-col border transition-opacity duration-200 ${
+      className={`w-full md:w-[calc(25%-15px)] overflow-hidden rounded-3xl flex flex-col border border-brand-border bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_16px_32px_-12px_rgba(16,25,42,0.16)] ${
         isOutOfStock ? "opacity-60" : ""
       }`}
     >
       <div className="relative w-full aspect-square">
         {/* Бейдж скидки в левом верхнем углу */}
         {isPromo && !isOutOfStock && (
-          <div className="absolute top-3 left-3 bg-[#38C948] text-white font-semibold text-xs px-2.5 py-1 rounded-md z-10 shadow-sm">
+          <div className="absolute top-3 left-3 bg-brand-green text-white font-semibold text-xs px-2.5 py-1 rounded-md z-10 shadow-sm">
             СКИДКА
           </div>
         )}
@@ -105,32 +105,32 @@ export const ItemCard = ({ item }: IItemProps) => {
         )}
       </div>
 
-      <div className="flex flex-col gap-2 p-4 bg-[#E6EEF2] rounded-b-3xl effectively-disabled">
+      <div className="flex flex-col gap-2 p-4 bg-white rounded-b-3xl">
         <div>
-          <p className="text-[#B0B0B0] text-sm">{item.brand}</p>
-          <h4 className="text-[#1E2D42] text-[18px] font-medium truncate">
+          <p className="text-brand-muted text-sm">{item.brand}</p>
+          <h4 className="text-brand-ink text-[18px] font-medium truncate">
             {item.title}
           </h4>
         </div>
 
         <div className="flex items-center justify-between">
-          <div className="flex items-baseline gap-1.5 flex-wrap text-[#1E2D42]">
+          <div className="flex items-baseline gap-1.5 flex-wrap text-brand-ink">
             {/* Старая перечеркнутая цена (показываем только если есть скидка) */}
             {isPromo && (
-              <span className="text-sm text-[#9CA3AF] line-through font-normal">
+              <span className="font-num text-sm text-brand-muted line-through font-normal">
                 {oldPrice} сом
               </span>
             )}
 
             {/* Текущая цена (всегда отображаем final_price) */}
-            <div className="flex items-baseline gap-0.5 text-[24px]">
-              <span className="font-bold">{displayPrice}</span>
-              <span className="font-normal text-[18px]">сом</span>
+            <div className="flex items-baseline gap-0.5 text-[22px] font-num">
+              <span className="font-semibold">{displayPrice}</span>
+              <span className="font-normal text-[16px]">сом</span>
             </div>
 
             {/* Красный таймер обратного отсчета */}
             {isPromo && timeLeft && (
-              <span className="text-[14px] text-[#DC2626] font-medium tracking-tight ml-0.5">
+              <span className="font-num text-[13px] text-brand-orange-dark font-medium tracking-tight ml-0.5">
                 {timeLeft}
               </span>
             )}
@@ -139,13 +139,13 @@ export const ItemCard = ({ item }: IItemProps) => {
           <button
             onClick={handleAddToCart}
             disabled={isOutOfStock}
-            className={`rounded-lg w-10 h-10 border border-[#1E2D42] flex items-center justify-center shrink-0 transition-all duration-200 
+            className={`rounded-full w-10 h-10 border border-brand-ink/20 flex items-center justify-center shrink-0 transition-all duration-200 
               ${
                 isOutOfStock
-                  ? "border-gray-400 text-gray-400 bg-transparent cursor-not-allowed"
-                  : "cursor-pointer hover:scale-110"
+                  ? "border-gray-300 text-gray-400 bg-transparent cursor-not-allowed"
+                  : "cursor-pointer hover:scale-110 hover:border-brand-ink"
               } 
-              ${isItemInCart && !isOutOfStock ? "bg-[#1E2D42] text-white" : ""}`}
+              ${isItemInCart && !isOutOfStock ? "bg-brand-ink border-brand-ink text-white" : ""}`}
           >
             {isOutOfStock ? (
               "✕"
