@@ -85,7 +85,7 @@ export default function CartCard({ product }: TypeCartCardProps) {
                   <button
                     type="button"
                     onClick={() => decrementQuantity(product.id)}
-                    className="w-[40px] h-[40px] md:w-[80px] md:h-[48px] p-0 border rounded-[6px] flex items-center justify-center bg-[#B0B0B0] border-t-[1px] border-r-[1px] border-b-[4px] border-l-[1px] cursor-pointer border-[#5E5E5E] hover:bg-[#5E5E5E] active:translate-y-[2px]"
+                    className="w-[40px] h-[40px]  md:w-[50px] md:h-[50px] p-[5px] rounded-[10px] flex items-center justify-center bg-[#B0B0B0]  cursor-pointer  hover:bg-[#5E5E5E] active:translate-y-[2px]"
                   >
                     <span className="pb-[.4375rem] font-light font-sans text-3xl ">
                       –
@@ -108,8 +108,10 @@ export default function CartCard({ product }: TypeCartCardProps) {
                     type="button"
                     disabled={isMaxStockReached || isLoading}
                     onClick={() => incrementQuantity(product.id)}
-                    className={`w-[40px] h-[40px] md:w-[80px] md:h-[48px] p-0 border rounded-[6px] flex items-center justify-center transition-all
-                      border-t-[1px] border-r-[1px] border-b-[4px] border-l-[1px] 
+                    className={`w-[40px] h-[40px]  md:w-[50px] md:h-[50px]  rounded-[10px] flex items-center justify-center transition-all
+                       
+                      cursor-pointer hover:bg-[#D97706] active:translate-y-[2px] 
+                      bg-[#F59E0B] border-[#D97706] cursor-pointer hover:bg-[#D97706] active:translate-y-[2px]
                       ${
                         isMaxStockReached || isLoading
                           ? "bg-gray-400 border-gray-500 cursor-not-allowed opacity-50 active:translate-y-0"
@@ -150,12 +152,9 @@ export default function CartCard({ product }: TypeCartCardProps) {
       <button
         type="button"
         onClick={handleDeleteClick}
-        className="absolute bottom-[65px] md:bottom-[20px] md:top-[20px] right-[20px] 
-                   bg-[#F59E0B] border-t-[1px] border-r-[1px] border-b-[4px] border-l-[1px] border-[#D97706]
-                   rounded-md md:w-[100px] h-[48px] px-2 md:px-5 cursor-pointer
-                  transition-all group hover:bg-[#D97706] active:translate-y-[2px] "
+        className="absolute bottom-[68px] md:bottom-[20px] md:top-[20px] right-[20px] rounded-[10px] bg-[#F59E0B] md:w-[50px] md:h-[48px] w-[40px] h-[40px] px-2  cursor-pointer   transition-all group hover:bg-[#D97706] active:translate-y-[2px] "
       >
-        <DeleteOutlined className="pt-1 text-[25px]" />
+        <DeleteOutlined className="pt-1 text-[20px]" />
       </button>
     </div>
   );
