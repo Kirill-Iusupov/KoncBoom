@@ -59,10 +59,16 @@ export const Search = ({ isMobileView }: { isMobileView?: boolean }) => {
           onBlur={handleBlur}
           className="absolute !bg-brand-blue-tint !rounded-full border-[1px solid black] w-full h-full top-0 right-0 overflow-hidden"
           placeholder="Поиск по канцелярии..."
+          styles={{
+            input: {
+              borderRadius: "9999px 0 0 9999px",
+              backgroundColor: "var(--brand-blue-tint)",
+            }
+          }}
           enterButton={
             <Button
               onClick={handleSearch}
-              className="!bg-brand-blue-tint w-14.75 h-full border-none hover:border-none"
+              className="!bg-brand-blue-tint w-14.75 h-full  border-0 border-l border-solid border-[#d8d7d7]"
               icon={<SearchOutlined />}
             />
           }
