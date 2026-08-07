@@ -71,9 +71,9 @@ class ProductViewSet(ListModelMixin, RetrieveModelMixin, viewsets.GenericViewSet
     throttle_classes = [CatalogReadThrottle]
 
     def get_queryset(self) -> QuerySet[Product]:
-        qs = Product.objects.select_related("category", "promotion").order_by(
-            "-popular", "title"
-        )
+        qs = Product.objects.select_related(
+            "category", "promotion", "promotion__required_product"
+        ).order_by("-popular", "title")
 
         category_slug = self.request.query_params.get("category")
         if category_slug:

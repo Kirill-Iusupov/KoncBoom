@@ -91,11 +91,6 @@ export const ItemCard = ({ item }: IItemProps) => {
             backgroundPosition: "center",
           }}
         />
-        {/* <img
-          src={item.image}
-          alt={item.title}
-          className="absolute inset-0 w-full h-full object-cover"
-        /> */}
         {isOutOfStock && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20">
             <span className="text-white font-medium bg-black/60 px-3 py-1 rounded-full text-sm">
@@ -111,6 +106,9 @@ export const ItemCard = ({ item }: IItemProps) => {
           <h4 className="text-brand-ink text-[18px] font-medium truncate">
             {item.title}
           </h4>
+          {item.promoInfo?.conditional && (
+            <p className="text-brand-muted text-sm">{item.promoInfo.title}</p>
+          )}
         </div>
 
         <div className="flex items-center justify-between">

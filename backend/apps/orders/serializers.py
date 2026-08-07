@@ -3,13 +3,13 @@
 
 Правила:
   - fields — всегда явный список, никогда '__all__' (mass assignment)
-  - Бизнес-логика (списание stock) — в services.py, НЕ здесь
+  - Бизнес-логика (списание stock, расчёт цен) — в services.py / pricing.py
   - Сериализатор только валидирует данные и формирует ответ
+  - Клиент присылает ТОЛЬКО product_id и quantity. Цены не принимаются
+    от клиента ни в каком виде — их полностью считает сервер.
 """
 
 import uuid
-from decimal import Decimal
-from typing import Any
 
 from rest_framework import serializers
 
@@ -19,18 +19,44 @@ from .models import Order, OrderItem
 
 
 class OrderItemInputSerializer(serializers.Serializer):
-    """Одна позиция во входящем запросе создания заказа."""
+    """Одна позиция во входящем запросе (заказ и предпросмотр)."""
 
     product_id = serializers.IntegerField(min_value=1)
     quantity = serializers.IntegerField(min_value=1, max_value=999)
 
     def validate_product_id(self, value: int) -> int:
-        """Проверяем, что товар существует и есть в наличии."""
         if not Product.objects.filter(pk=value).exists():
-            raise serializers.ValidationError(
-                f"Товар с id={value} не найден."
-            )
+            raise serializers.ValidationError(f"Товар с id={value} не найден.")
         return value
+
+
+def _validate_unique_products(value: list[dict]) -> list[dict]:
+    """
+    Общая проверка: один товар — одна позиция.
+    Движок цен (pricing.price_cart) строит словарь {product_id: quantity},
+    поэтому дубли молча схлопнулись бы и покупатель недосчитался товара.
+    """
+    product_ids = [item["product_id"] for item in value]
+    if len(product_ids) != len(set(product_ids)):
+        raise serializers.ValidationError(
+            "В заказе не должно быть дублирующихся товаров. "
+            "Объедините одинаковые позиции в одну."
+        )
+    return value
+
+
+class CartPreviewSerializer(serializers.Serializer):
+    """
+    Входящий запрос предпросмотра корзины (POST /api/orders/preview/).
+
+    Ничего не создаёт и не блокирует — только считает цены с учётом
+    условных акций и возвращает их фронту.
+    """
+
+    items = OrderItemInputSerializer(many=True, min_length=1)
+
+    def validate_items(self, value: list[dict]) -> list[dict]:
+        return _validate_unique_products(value)
 
 
 class OrderCreateSerializer(serializers.Serializer):
@@ -50,17 +76,11 @@ class OrderCreateSerializer(serializers.Serializer):
     items = OrderItemInputSerializer(many=True, min_length=1)
 
     def validate_items(self, value: list[dict]) -> list[dict]:
-        """Проверяем уникальность product_id в одном заказе."""
-        product_ids = [item["product_id"] for item in value]
-        if len(product_ids) != len(set(product_ids)):
-            raise serializers.ValidationError(
-                "В заказе не должно быть дублирующихся товаров. "
-                "Объедините одинаковые позиции в одну."
-            )
-        return value
+        return _validate_unique_products(value)
 
 
 # --- Сериализаторы ответа ---
+
 
 class OrderItemOutputSerializer(serializers.ModelSerializer):
     """Позиция заказа в ответе."""

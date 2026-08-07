@@ -3,12 +3,18 @@
 
 Контракт с фронтом:
   - categorie (строка, не id) — намеренная опечатка фронта
-  - final_price — НОВОЕ: итоговая цена с учётом активной акции.
-    Считается на бэкенде (Product.current_price) — фронт НЕ должен
-    сам вычислять скидку из price и discount, чтобы не разойтись
-    в округлении с ценой заказа.
-  - promoInfo: promo, eyebrow, title, description, discount, starts_at, ends_at
+  - final_price — цена с учётом БЕЗУСЛОВНОЙ акции (Product.current_price).
+    Условные акции сюда не попадают: их нельзя посчитать без корзины,
+    для них есть POST /api/orders/preview/.
+  - promoInfo расширен полями условия (см. get_promoInfo).
   - Поля только явным списком, никогда '__all__'
+
+Обратная совместимость promoInfo.promo:
+  promo=True означает «скидка УЖЕ применена к final_price» — то есть
+  только для безусловных акций. Для условной акции promo=False,
+  а conditional=True. Так старый фронт, который умеет только
+  зачёркивать price при promo=True, не покажет одинаковые цены
+  дважды, а новый — отрисует плашку с условием по conditional.
 """
 
 from typing import Any
@@ -40,11 +46,6 @@ class ProductSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
     promoInfo = serializers.SerializerMethodField()
 
-    # Итоговая цена с учётом скидки. source указывает на @property
-    # Product.current_price — DRF умеет сериализовать property через source.
-    # Формат совпадает с price (DecimalField, 2 знака) — фронту не нужно
-    # ничего конвертировать, просто сравнить price != final_price для
-    # отображения зачёркнутой цены.
     final_price = serializers.DecimalField(
         source="current_price",
         max_digits=10,
@@ -78,13 +79,23 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def get_promoInfo(self, obj: Product) -> dict[str, Any]:
         """
-        Собирает promoInfo из Promotion.
-        discount — по-прежнему процент, для бейджа "-20%" на фронте.
-        Реальная сумма скидки — в final_price на верхнем уровне ответа.
-        select_related("promotion") во вьюхе исключает N+1.
+        Данные акции для карточки товара.
+
+        promo       — скидка уже в final_price (безусловная акция)
+        conditional — акция активна, но сработает только в корзине
+        condition_text — готовая строка для плашки («От 10 шт — скидка 15%»)
+
+        select_related("promotion", "promotion__required_product") во вьюхе
+        исключает N+1.
         """
         empty: dict[str, Any] = {
             "promo": False,
+            "conditional": False,
+            "condition_type": "",
+            "condition_text": "",
+            "min_quantity": None,
+            "required_product": None,
+            "required_quantity": None,
             "eyebrow": "",
             "title": "",
             "description": "",
@@ -93,16 +104,33 @@ class ProductSerializer(serializers.ModelSerializer):
             "ends_at": None,
         }
 
-        try:
-            promo: Promotion = obj.promotion
-        except Promotion.DoesNotExist:
+        promo: Promotion | None = getattr(obj, "promotion", None)
+        if promo is None or not promo.is_active:
             return empty
 
-        if not promo.is_active:
-            return empty
+        unconditional = promo.is_unconditional
+
+        required_product = None
+        if promo.required_product_id and promo.required_product:
+            required_product = {
+                "id": promo.required_product.id,
+                "title": promo.required_product.title,
+                "slug": promo.required_product.slug,
+            }
 
         return {
-            "promo": True,
+            # True только если цена в final_price уже снижена
+            "promo": unconditional,
+            "conditional": not unconditional,
+            "condition_type": promo.condition_type,
+            "condition_text": promo.condition_text,
+            "min_quantity": promo.min_quantity,
+            "required_product": required_product,
+            "required_quantity": (
+                promo.required_quantity
+                if promo.condition_type == Promotion.ConditionType.REQUIRES_PRODUCT
+                else None
+            ),
             "eyebrow": promo.eyebrow,
             "title": promo.title,
             "description": promo.description,

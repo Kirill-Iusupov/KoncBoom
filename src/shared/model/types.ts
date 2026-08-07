@@ -15,6 +15,9 @@ export type ItemFormat = {
   image: string;
   popular: boolean;
   promoInfo: IPromoInfo;
+  slug: string;
+  stock: number;
+  final_price: string;
 };
 
 export type Product = {
@@ -44,6 +47,12 @@ export interface IPromoInfo {
   discount: number;
   starts_at: Date | string;
   ends_at: Date | string;
+  conditional?: boolean;
+  condition_type?: string;
+  condition_text?: string;
+  min_quantity?: number | null;
+  required_product?: any;
+  required_quantity?: number | null;
 }
 
 export type CategoriesResult = {

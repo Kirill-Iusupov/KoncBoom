@@ -131,6 +131,7 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_THROTTLE_RATES": {
         "order_create": "5/min",
+        "cart_preview": "120/min",
         "catalog_read": "60/min",
     },
     "DEFAULT_RENDERER_CLASSES": [

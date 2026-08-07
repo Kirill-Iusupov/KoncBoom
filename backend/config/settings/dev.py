@@ -24,5 +24,6 @@ SPECTACULAR_SETTINGS["SERVE_INCLUDE_SCHEMA"] = True
 # Более мягкий rate limit в dev — не мешает ручному тестированию
 REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
     "order_create": "100/min",
+    "cart_preview": "1000/min",
     "catalog_read": "1000/min",
 }
