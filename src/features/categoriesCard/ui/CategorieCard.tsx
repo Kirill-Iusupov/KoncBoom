@@ -11,18 +11,19 @@ const CategorieCard = ({ item }: ICatProps) => {
   return (
     <Link
       href={`/catalog/?category=${item.title}`}
-      className="w-[calc((100%/2)-20px)] md:w-[calc((100%/6)-20px)] h-50 rounded-2xl bg-[#E6EEF2] flex flex-col items-center justify-center
-      hover:bg-[linear-gradient(124.72deg,rgba(59,130,246,0.2)_4.86%,rgba(128,176,255,0.5)_50.2%,rgba(30,45,66,0.8)_100%)] hover:shadow-[7px_4px_15px_0px_#00000040_inset,-10px_-10px_15px_0px_#00000040_inset,1px_4px_7px_0px_#0000004D]"
+      className="w-[calc((100%/2)-20px)] md:w-[calc((100%/6)-20px)] h-50 rounded-2xl bg-white border border-brand-border flex flex-col items-center justify-center gap-2 transition-all duration-200 hover:border-brand-blue/50 hover:-translate-y-1 hover:shadow-[0_14px_28px_-10px_rgba(16,25,42,0.16)]"
     >
       {item.icon && (
-        <img
-          src={item.icon}
-          alt={item.description || item.title}
-          className="w-[60px] h-[60px] object-contain"
-        />
+        <div className="w-16 h-16 rounded-2xl bg-brand-blue-tint flex items-center justify-center">
+          <img
+            src={item.icon}
+            alt={item.description || item.title}
+            className="w-8 h-8 object-contain"
+          />
+        </div>
       )}
-      <strong>{item.title}</strong>
-      <p>{item.count} товаров</p>
+      <strong className="text-brand-ink text-center px-2">{item.title}</strong>
+      <p className="text-brand-muted text-sm">{item.count} товаров</p>
     </Link>
   );
 };

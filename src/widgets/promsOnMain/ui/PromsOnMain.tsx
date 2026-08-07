@@ -5,6 +5,7 @@ import { PromCard } from "@/src/features/promCard/ui/PromCard";
 import { useProductsStore } from "@/src/entities/catalog/model/store";
 import EmptyPromos from "@/src/features/emptyPromos";
 import { usePathname } from "next/navigation";
+import { Product } from "@/src/shared/model/types";
 
 const PromsOnMain = () => {
   const pathname = usePathname();
@@ -12,7 +13,9 @@ const PromsOnMain = () => {
 
   const { results } = products;
 
-  const promoItems = results.filter((e) => e.promoInfo.promo);
+  const promoItems = results.filter(
+    (e) => e.promoInfo.promo || e.promoInfo.conditional,
+  );
 
   return (
     <div>
