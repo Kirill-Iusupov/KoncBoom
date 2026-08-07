@@ -7,15 +7,12 @@
     признак акции — через list_select_related('promotion').
   - Промо-акция редактируется ТОЛЬКО инлайном внутри товара
     (связь один-к-одному), отдельного пункта меню больше нет.
-  - В списке товаров: превью картинки, бейдж активной акции,
-    фильтр «на акции сейчас». Быстрое редактирование цены/остатка/
-    популярности прямо в списке сохранено.
-  - final_price_display — итоговая цена с учётом скидки (Product.current_price),
-    видна прямо в списке рядом с обычной ценой. Формат — format_kgs()
-    (общий хелпер "1 234 сом"), раньше здесь было "{} KGS" — несогласованно
-    с остальной админкой (заказы уже использовали сом).
-  - ClickableRowAdminMixin + расширенный list_display_links — переход
-    в объект по клику на всю строку, а не только по узкой ссылке.
+  - final_price_display — итоговая цена с учётом БЕЗУСЛОВНОЙ скидки.
+    Для условных акций показывает прочерк: цена зависит от корзины,
+    в списке товаров её честно назвать нельзя.
+  - ClickableRowAdminMixin — переход в объект по клику на всю строку.
+  - Типы акций: поля условия показываются/прячутся по выбранному типу
+    (static/admin/js/promotion_condition.js).
 """
 
 from __future__ import annotations
@@ -40,14 +37,15 @@ _THUMB_EMPTY = (
     "border:1px dashed rgba(120,120,140,.5)"
 )
 _ICO = "height:30px;width:30px;object-fit:contain"
-_PILL = "display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600"
+_PILL = (
+    "display:inline-block;padding:2px 9px;border-radius:999px;"
+    "font-size:12px;font-weight:600"
+)
 
 
 @admin.register(Category)
 class CategoryAdmin(ClickableRowAdminMixin, ModelAdmin):
     list_display = ["icon_preview", "title", "product_count"]
-    # Ни одно поле не в list_editable — можно сделать кликабельными все
-    # колонки. Фактическая область клика — вся строка (ClickableRowAdminMixin).
     list_display_links = ["icon_preview", "title", "product_count"]
     search_fields = ["title"]
     prepopulated_fields = {"slug": ("title",)}
@@ -90,11 +88,45 @@ class OnSaleFilter(admin.SimpleListFilter):
 
 
 class PromotionInline(StackedInline):
+    """
+    Акция товара. Поля условия (min_quantity / required_product /
+    required_quantity) показываются в зависимости от выбранного типа —
+    за это отвечает promotion_condition.js, чтобы владелец магазина
+    не видел десяток полей, из которых нужны два.
+    """
+
     model = Promotion
+    fk_name = "product"
     extra = 0
     verbose_name = "Акция"
     verbose_name_plural = "Акция"
-    fields = ["eyebrow", "title", "description", "discount", "starts_at", "ends_at"]
+    autocomplete_fields = ["required_product"]
+
+    fieldsets = [
+        (
+            None,
+            {
+                "fields": [
+                    "condition_type",
+                    "discount",
+                    "min_quantity",
+                    "required_product",
+                    "required_quantity",
+                ]
+            },
+        ),
+        (
+            "Оформление",
+            {"fields": ["eyebrow", "title", "description"]},
+        ),
+        (
+            "Период",
+            {"fields": ["starts_at", "ends_at"]},
+        ),
+    ]
+
+    class Media:
+        js = ["admin/js/promotion_condition.js"]
 
 
 @admin.register(Product)
@@ -110,10 +142,6 @@ class ProductAdmin(ClickableRowAdminMixin, ModelAdmin):
         "popular",
         "promo_badge",
     ]
-    # price, stock, popular — в list_editable, их нельзя одновременно
-    # включить в list_display_links (ограничение Django). Остальные
-    # колонки кликабельны, а благодаря ClickableRowAdminMixin реально
-    # кликабельна вся строка целиком.
     list_display_links = [
         "image_preview",
         "title",
@@ -134,6 +162,15 @@ class ProductAdmin(ClickableRowAdminMixin, ModelAdmin):
         ("Цена и склад", {"fields": ["price", "stock", "popular"]}),
     ]
 
+    def get_queryset(self, request: HttpRequest) -> QuerySet[Product]:
+        # promotion__required_product нужен для подписи бейджа условной
+        # акции — без него был бы запрос на каждую строку списка.
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("promotion__required_product")
+        )
+
     @admin.display(description="")
     def image_preview(self, obj: Product) -> str:
         if not obj.image:
@@ -143,9 +180,9 @@ class ProductAdmin(ClickableRowAdminMixin, ModelAdmin):
     @admin.display(description="Итоговая цена")
     def final_price_display(self, obj: Product) -> str:
         """
-        Показывает Product.current_price — ту же цену, что видит покупатель
-        на сайте (final_price в API) и что зафиксируется в заказе.
-        Если акция не активна — совпадает с обычной price, выделение не нужно.
+        Цена с учётом безусловной акции. Для условных акций честный
+        прочерк — итоговая цена зависит от корзины покупателя и в списке
+        товаров не определена.
         """
         current = obj.current_price
         if current == obj.price:
@@ -158,18 +195,31 @@ class ProductAdmin(ClickableRowAdminMixin, ModelAdmin):
 
     @admin.display(description="Акция")
     def promo_badge(self, obj: Product) -> str:
-        try:
-            promo = obj.promotion
-        except Promotion.DoesNotExist:
+        promo = getattr(obj, "promotion", None)
+        if promo is None:
             return mark_safe('<span style="opacity:.4">—</span>')
-        if promo.is_active:
+
+        if not promo.is_active:
+            return format_html(
+                '<span style="{};background:rgba(120,120,140,.15);'
+                'color:inherit;opacity:.7">не активна</span>',
+                _PILL,
+            )
+
+        if promo.is_unconditional:
             return format_html(
                 '<span style="{};background:#dcfce7;color:#166534">−{}%</span>',
                 _PILL,
                 promo.discount,
             )
+
+        # Условная акция — показываем и процент, и само условие,
+        # чтобы владелец видел разницу прямо в списке.
         return format_html(
-            '<span style="{};background:rgba(120,120,140,.15);color:inherit;opacity:.7">'
-            "не активна</span>",
+            '<span style="{};background:#fef3c7;color:#92400e">−{}%</span>'
+            '<span style="display:block;font-size:11px;opacity:.65;'
+            'margin-top:3px">{}</span>',
             _PILL,
+            promo.discount,
+            promo.condition_text,
         )

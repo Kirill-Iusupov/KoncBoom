@@ -14,34 +14,31 @@ View только вызывает create_order() и возвращает рез
   - Если заказ с idempotency_key уже существует — возвращаем его без повторного
     списания stock. Это защита от двойного сабмита при сетевых ретраях.
 
-Скидки:
-  - unit_price фиксируется через Product.current_price (учитывает активную
-    Promotion), а не через "голую" Product.price. current_price — единая
-    точка расчёта, та же, что используется в API (ProductSerializer.final_price).
+Цены и акции:
+  - unit_price фиксируется через apps.catalog.pricing.price_cart() — тот же
+    движок, что обслуживает POST /api/orders/preview/. Раньше здесь была
+    Product.current_price, но она видит только один товар и не умеет
+    в условные акции («от 10 шт», «нужен другой товар»), которые зависят
+    от состава корзины. Общий движок гарантирует, что сумма в корзине
+    покупателя и сумма в оформленном заказе совпадут.
+  - Цена клиента НИКОГДА не принимается на веру: фронт присылает только
+    product_id и quantity, все цены считает сервер.
 
-select_for_update() + select_related("promotion"):
-  - Promotion — необязательная обратная OneToOne-связь (не у каждого товара
-    есть акция), поэтому select_related строит LEFT OUTER JOIN.
-    PostgreSQL запрещает `SELECT ... FOR UPDATE` поверх LEFT OUTER JOIN,
-    решение — of=("self",): блокируем FOR UPDATE только таблицу Product.
-
-Возврат stock (restore_stock_for_order):
-  - Вызывается из apps/orders/signals.py при отмене заказа (смена статуса
-    на "cancelled") и при удалении заказа (админка, ORM). Используем
-    F('stock') + qty — тот же атомарный паттерн, что и при списании,
-    чтобы не потерять инкремент при параллельном заказе того же товара.
-  - Идемпотентность обеспечивает вызывающий код (сигналы проверяют
-    order.stock_restored перед вызовом) — сама функция это не проверяет.
+select_for_update() + select_related:
+  - promotion и promotion__required_product — необязательные связи, поэтому
+    select_related строит LEFT OUTER JOIN. PostgreSQL запрещает
+    `SELECT ... FOR UPDATE` поверх такого джойна, поэтому of=("self",):
+    блокируем только строки Product, джойны остаются доступны для чтения.
 """
 
 import uuid
-from decimal import Decimal
 from typing import Any
 
 from django.db import IntegrityError, transaction
 from django.db.models import F
 
 from apps.catalog.models import Product
+from apps.catalog.pricing import price_cart
 
 from .models import Order, OrderItem
 
@@ -89,9 +86,13 @@ def create_order(
     product_ids = [item["product_id"] for item in items]
 
     with transaction.atomic():
+        # Блокируем строки товаров. select_related нужен движку цен:
+        # он читает promotion и promotion.required_product.
         products: dict[int, Product] = {
             p.pk: p
-            for p in Product.objects.select_related("promotion")
+            for p in Product.objects.select_related(
+                "promotion", "promotion__required_product"
+            )
             .select_for_update(of=("self",))
             .filter(pk__in=product_ids)
         }
@@ -111,6 +112,12 @@ def create_order(
                     requested=qty,
                 )
 
+        # Считаем цены ТЕМ ЖЕ движком, что и preview. products передаём
+        # уже загруженными — иначе price_cart сделает свой запрос и мы
+        # потеряем блокировку select_for_update на этих строках.
+        priced = price_cart(items, products=products)
+        unit_prices = priced.unit_price_map()
+
         try:
             order = Order.objects.create(
                 idempotency_key=idempotency_key,
@@ -127,20 +134,20 @@ def create_order(
         for item in items:
             product = products[item["product_id"]]
             qty = item["quantity"]
-            unit_price: Decimal = product.current_price
 
+            # Снимок итоговой цены на момент заказа. Если завтра акция
+            # закончится или условие перестанет выполняться — цена
+            # в оформленном заказе не изменится.
             order_items.append(
                 OrderItem(
                     order=order,
                     product=product,
                     quantity=qty,
-                    unit_price=unit_price,
+                    unit_price=unit_prices[product.pk],
                 )
             )
 
-            Product.objects.filter(pk=product.pk).update(
-                stock=F("stock") - qty
-            )
+            Product.objects.filter(pk=product.pk).update(stock=F("stock") - qty)
 
         OrderItem.objects.bulk_create(order_items)
 
@@ -158,8 +165,7 @@ def restore_stock_for_order(order: Order) -> None:
 
     F('stock') + qty — атомарная SQL-операция, не читает текущее
     значение в Python, поэтому безопасна при параллельных операциях
-    с тем же товаром (например, кто-то оформляет новый заказ в этот
-    момент).
+    с тем же товаром.
     """
     items = list(order.items.values("product_id", "quantity"))
     if not items:
@@ -168,10 +174,6 @@ def restore_stock_for_order(order: Order) -> None:
     product_ids = [i["product_id"] for i in items]
 
     with transaction.atomic():
-        # Блокируем строки товаров перед инкрементом — тот же паттерн,
-        # что и в create_order, но в обратную сторону (+qty вместо -qty).
-        # of=("self",) не обязателен здесь (нет select_related), но оставлен
-        # для единообразия с create_order на случай будущих правок.
         list(
             Product.objects.select_for_update(of=("self",)).filter(
                 pk__in=product_ids
