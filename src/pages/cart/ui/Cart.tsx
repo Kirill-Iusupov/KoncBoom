@@ -2,7 +2,6 @@
 "use client";
 
 import { useState } from "react";
-import CartCard from "@/src/features/cart/ui/сartCard/ui/CartCard";
 import CustomPagination from "@/src/shared/ui/CustomPagination";
 import { Wrapper } from "@/src/shared/ui/Wrapper";
 import Heading from "@/src/widgets/heading";
@@ -11,7 +10,8 @@ import Heading from "@/src/widgets/heading";
 import { useCartStore } from "@/src/entities/cart/model/cartStore";
 import { useModal } from "@/src/context/ModalProvider";
 import MakingOrdering from "@/src/widgets/checkout/ui/MakingOrdering";
-import { ClearCartModal } from "@/src/features/cart/ui/сartCard/ClearCartModal";
+import { ClearCartModal } from "@/src/features/cart/ui/CartCard/ClearCartModal";
+import CartCard from "@/src/features/cart/ui/CartCard/ui/CartCard";
 
 const PAGE_SIZE = 4; 
 

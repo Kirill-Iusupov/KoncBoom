@@ -1,13 +1,47 @@
 @import "tailwindcss" important;
 
+@theme {
+  --color-brand-ink: #1e2d42;
+  --color-brand-ink-dark: #10192a;
+  --color-brand-blue: #3b82f6;
+  --color-brand-blue-tint: #eaf1fb;
+  --color-brand-orange: #f59e0b;
+  --color-brand-orange-dark: #d97706;
+  --color-brand-bg: #f7f9fc;
+  --color-brand-surface: #ffffff;
+  --color-brand-border: #e3e8f0;
+  --color-brand-muted: #64748b;
+  --color-brand-green: #16a34a;
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-button,a {
+html {
+  background: var(--color-brand-bg);
+}
+
+body {
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  color: var(--color-brand-ink);
+}
+
+.font-num {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+}
+
+button,
+a {
   cursor: pointer;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2.5px solid var(--color-brand-orange);
+  outline-offset: 2px;
 }
 
 .ant-custom-pure .ant-pagination-item {
@@ -19,13 +53,11 @@ button,a {
   height: auto !important;
 }
 
-
 .ant-custom-pure .ant-pagination-item a,
 .ant-custom-pure .ant-pagination-item focus-visible {
   outline: none !important;
   border: none !important;
 }
-
 
 .ant-custom-pure .ant-pagination-prev,
 .ant-custom-pure .ant-pagination-next {
