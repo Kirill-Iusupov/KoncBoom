@@ -2,7 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // output: "standalone" — обязательно для Docker-образа на основе node server.js
-  // Без этого Dockerfile.frontend не найдёт .next/standalone/server.js
   output: "standalone",
   allowedDevOrigins: ['agglomerative-elliot-unobstinately.ngrok-free.dev'],
   // Разрешаем загрузку изображений с backend (Django media)
@@ -11,14 +10,11 @@ const nextConfig: NextConfig = {
       {
         protocol: "http",
         hostname: "localhost",
-        port: "80",
         pathname: "/media/**",
       },
       {
         protocol: "https",
-        hostname: process.env.NEXT_PUBLIC_API_URL
-          ? new URL(process.env.NEXT_PUBLIC_API_URL).hostname
-          : "localhost",
+        hostname: "agglomerative-elliot-unobstinately.ngrok-free.dev",
         pathname: "/media/**",
       },
     ],
