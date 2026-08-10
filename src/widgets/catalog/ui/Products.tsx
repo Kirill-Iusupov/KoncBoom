@@ -18,6 +18,8 @@ export const Products = () => {
     initialState,
   );
 
+console.log("Проверка");
+
 useEffect(() => {
   console.log("Компонент смонтирован, вызываем getProducts()");
   getProducts();
