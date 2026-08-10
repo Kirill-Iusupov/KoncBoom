@@ -4,6 +4,7 @@ import { Wrapper } from "@/src/shared/ui/Wrapper";
 import Heading from "@/src/widgets/heading";
 
 export const Catalog = () => {
+  console.log("🔥 РЕНДЕРИТСЯ СТРАНИЦА КАТАЛОГА");
   return (
     <div>
       <Heading />
