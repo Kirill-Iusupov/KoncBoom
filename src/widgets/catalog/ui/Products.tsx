@@ -18,9 +18,10 @@ export const Products = () => {
     initialState,
   );
 
-  useEffect(() => {
-    getProducts();
-  }, []);
+useEffect(() => {
+  console.log("Компонент смонтирован, вызываем getProducts()");
+  getProducts();
+}, [getProducts]);
 
   const { results } = products;
 
