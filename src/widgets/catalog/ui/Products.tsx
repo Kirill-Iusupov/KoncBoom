@@ -7,10 +7,13 @@ import { CategoryFilters } from "@/src/widgets/categoriesFilter/ui/CategoryFilte
 import EmptyPromos from "@/src/features/emptyPromos";
 
 export const Products = () => {
-  const { products, getProducts, isLoading } = useProductsStore();
+  const productsState = useProductsStore();
+  const products = productsState?.products;
+  const getProducts = productsState?.getProducts;
+  const isLoading = productsState?.isLoading ?? false;
 
   useEffect(() => {
-    console.log("Функция getProducts доступна:", typeof getProducts);
+    console.log("🔥 ЭФФЕКТ ЗАПУЩЕН, вызываем getProducts");
     if (typeof getProducts === "function") {
       getProducts();
     }
@@ -19,7 +22,7 @@ export const Products = () => {
   const results = products?.results || [];
 
   return (
-    <div className="w-full bg-black flex flex-col justify-center gap-10 mt-10 mb-10">
+    <div className="w-full flex flex-col justify-center gap-10 mt-10 mb-10">
       <CategoryFilters active="Все" onChange={() => {}} />
 
       {isLoading ? (
