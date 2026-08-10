@@ -1,18 +1,25 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import ItemCard from "@/src/features/ItemCard";
 import { useProductsStore } from "@/src/entities/catalog/model/store";
 import { CategoryFilters } from "@/src/widgets/categoriesFilter/ui/CategoryFilters";
 import EmptyPromos from "@/src/features/emptyPromos";
 
 export const Products = () => {
+  const [isClient, setIsClient] = useState(false);
   const { products, getProducts, isLoading } = useProductsStore();
 
+  // Гарантируем, что код выполнится строго на клиенте после монтирования
   useEffect(() => {
-    console.log("ЗАПРОС ТОВАРОВ ПОШЕЛ!");
+    setIsClient(true);
+    console.log("🔥 БРАУЗЕРНЫЙ useEffect СРАБОТАЛ!");
     getProducts();
   }, [getProducts]);
+
+  if (!isClient) {
+    return <div className="w-full flex justify-center mt-10">Инициализация...</div>;
+  }
 
   const { results } = products;
 
