@@ -27,7 +27,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>)
-console.log("Proverka"){
+{
   
   return (
     <html
