@@ -15,7 +15,7 @@ export const Header = () => {
 
   return (
 
-    <div className="bg-white/90 backdrop-blur-md sticky top-0 z-20 border-b border-brand-border">
+    <div className="bg-black/90 backdrop-blur-md sticky top-0 z-20 border-b border-brand-border">
       <Wrapper>
         <nav className="flex justify-between items-center py-3.5!">
           <Link href="/" onClick={() => setIsMenuOpen(false)} className="shrink-0">
