@@ -9,8 +9,14 @@ import { CategoryFilters } from "@/src/widgets/categoriesFilter/ui/CategoryFilte
 import EmptyPromos from "@/src/features/emptyPromos";
 
 export const Products = () => {
+  const [isMounted, setIsMounted] = useState(false);
   const { products, getProducts, isLoading } = useProductsStore();
   const searchParams = useSearchParams();
+
+  // Фиксируем момент, когда компонент перешел на клиент
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const category = searchParams?.get("category");
   const initialState = !category ? "Все" : category;
@@ -18,12 +24,18 @@ export const Products = () => {
     initialState,
   );
 
-console.log("Проверка");
+  // Вызываем загрузку товаров строго после монтирования в браузере
+  useEffect(() => {
+    if (isMounted) {
+      console.log("Компонент смонтирован, вызываем getProducts()");
+      getProducts();
+    }
+  }, [isMounted, getProducts]);
 
-useEffect(() => {
-  console.log("Компонент смонтирован, вызываем getProducts()");
-  getProducts();
-}, [getProducts]);
+  // Пока компонент не смонтирован на клиенте, возвращаем безопасный заглушечный HTML
+  if (!isMounted) {
+    return <div className="w-full flex justify-center mt-10">Loading...</div>;
+  }
 
   const { results } = products;
 
@@ -37,7 +49,7 @@ useEffect(() => {
       <CategoryFilters active={activeCategory} onChange={setActiveCategory} />
 
       {isLoading ? (
-        <>Loading...</>
+        <div>Loading...</div>
       ) : filteredItems.length <= 0 ? (
         <EmptyPromos title="Нет товаров выбранной категории" description="" />
       ) : (
