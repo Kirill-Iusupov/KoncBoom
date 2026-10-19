@@ -1,0 +1,2 @@
+# Скрипты запускаются в Linux-контейнерах: CRLF ломает shebang ("no such file or directory")
+*.sh text eol=lf

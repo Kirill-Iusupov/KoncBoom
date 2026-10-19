@@ -1,0 +1,92 @@
+# Прод на домашнем сервере anton за Cloudflare Tunnel (без белого IP и без открытых портов).
+# Этот файл вставляется в OMV UI → Compose → Files (проект KantsBum).
+# Код — клон репо в /appdata/KantsBum/app, образы собираются на сервере.
+# TLS делает Cloudflare, наружу смотрит только nginx — через общую docker-сеть "edge".
+# Маршрут в туннеле: kantsbum.shop / www.kantsbum.shop → http://kantsbum-web:80
+# Все переменные — в одном Environment проекта в OMV (образец: .env.prod.example).
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: ./app/backend
+    # Пересобирать при каждом Up: после git pull новый код сразу попадает в образ
+    pull_policy: build
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.prod
+      POSTGRES_HOST: db
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - static_data:/app/staticfiles
+      - media_data:/app/media
+    # migrate + collectstatic + gunicorn — в entrypoint.sh
+
+  frontend:
+    build:
+      context: ./app
+      dockerfile: Dockerfile.frontend
+      args:
+        # Фронт ходит на относительный /api; этот URL нужен next.config.ts
+        # (хост для images.remotePatterns)
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    pull_policy: build
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+  # Django при DEBUG=False не раздаёт /static/ и /media/ — это делает nginx,
+  # /api/ и /admin/ проксирует в gunicorn, остальное — в Next.js.
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - frontend
+    volumes:
+      - ./app/backend/nginx/tunnel.conf:/etc/nginx/conf.d/default.conf:ro
+      - static_data:/app/staticfiles:ro
+      - media_data:/app/media:ro
+    networks:
+      default:
+      edge:
+        # Уникальный алиас: голое имя сервиса "nginx" может столкнуться с другим проектом в edge
+        aliases:
+          - kantsbum-web
+
+volumes:
+  postgres_data:
+  static_data:
+  media_data:
+
+networks:
+  edge:
+    external: true
